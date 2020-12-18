@@ -1,0 +1,40 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/sbDetectorConstruction.hh
+G4VUserDetectorConstruction.hh
+../include/G4VUserDetectorConstruction.hh
+globals.hh
+../include/globals.hh
+
+/home/zhaoshihan/repos/Geant4/smallbox/src/sbDetectorConstruction.cc
+sbDetectorConstruction.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/sbDetectorConstruction.hh
+G4RunManager.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4RunManager.hh
+G4NistManager.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4NistManager.hh
+G4Box.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4Box.hh
+G4Cons.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4Cons.hh
+G4Orb.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4Orb.hh
+G4Sphere.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4Sphere.hh
+G4Trd.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4Trd.hh
+G4LogicalVolume.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4LogicalVolume.hh
+G4PVPlacement.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4PVPlacement.hh
+G4SystemOfUnits.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4SystemOfUnits.hh
+G4SubtractionSolid.hh
+/home/zhaoshihan/repos/Geant4/smallbox/src/G4SubtractionSolid.hh
+

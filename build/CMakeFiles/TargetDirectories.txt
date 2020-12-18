@@ -1,0 +1,7 @@
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/install/strip.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/install/local.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/install.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/list_install_components.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/rebuild_cache.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/edit_cache.dir
+/home/zhaoshihan/repos/Geant4/smallbox/build/CMakeFiles/smallbox.dir
