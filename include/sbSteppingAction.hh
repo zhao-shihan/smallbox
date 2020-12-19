@@ -1,5 +1,5 @@
-#ifndef STEPPING_ACTION_H
-#define STEPPING_ACTION_H 1
+#ifndef SB_STEPPING_ACTION_H
+#define SB_STEPPING_ACTION_H 1
 
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"

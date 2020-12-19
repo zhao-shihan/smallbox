@@ -1,5 +1,5 @@
-#ifndef EVENT_ACTION_H
-#define EVENT_ACTION_H 1
+#ifndef SB_EVENT_ACTION_H
+#define SB_EVENT_ACTION_H 1
 
 #include "G4UserEventAction.hh"
 #include "globals.hh"

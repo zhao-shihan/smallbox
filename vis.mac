@@ -55,7 +55,7 @@
 #
 # To get nice view
 # Make the "World" box invisible
-#/vis/geometry/set/visibility World 0 false
+/vis/geometry/set/visibility World 0 false
 #
 # "Envelope" is transparent blue to represent water
 /vis/geometry/set/colour Scintillator_1 0 0 0 1 .1

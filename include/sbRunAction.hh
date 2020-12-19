@@ -1,5 +1,5 @@
-#ifndef RUN_ACTION_H
-#define RUN_ACTION_H 1
+#ifndef SB_RUN_ACTION_H
+#define SB_RUN_ACTION_H 1
 
 #include "G4UserRunAction.hh"
 #include "G4Accumulable.hh"

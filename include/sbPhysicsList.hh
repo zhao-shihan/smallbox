@@ -1,14 +1,29 @@
-#ifndef PHYSICS_LIST_H
-#define PHYSICS_LIST_H 1
+#ifndef SB_PHYSICS_LIST_H
+#define SB_PHYSICS_LIST_H 1
 
 #include "G4VModularPhysicsList.hh"
 
-class PhysicsList : public G4VModularPhysicsList {
-public:
-    PhysicsList();
-    virtual ~PhysicsList();
+class secOpticalPhysics;
+class G4DecayPhysics;
+class G4EmStandardPhysics;
+class G4HadronElasticPhysics;
+class G4IonPhysics;
+class G4StepLimiterPhysics;
 
+class sbPhysicsList : public G4VModularPhysicsList {
+public:
+    sbPhysicsList();
+    virtual ~sbPhysicsList();
     virtual void SetCuts();
+
+private:
+    secOpticalPhysics* OpticalPhysics_init(void);
+    G4DecayPhysics* DecayPhysics_init(void);
+    G4EmStandardPhysics* EmPhysics_init(void);
+    G4HadronElasticPhysics* HadronElasticPhysics_init(void);
+    G4IonPhysics* IonPhysics_init(void);
+    G4StepLimiterPhysics* StepLimiter_init(void);
 };
 
 #endif
+

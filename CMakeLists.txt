@@ -2,13 +2,13 @@ cmake_minimum_required (VERSION 2.6)
 project (smallbox)
 
 # Set version
-set (VERSION_MAJOR 1)
-set (VERSION_MINOR 0)
+set (SB_VERSION_MAJOR 1)
+set (SB_VERSION_MINOR 0)
 
 # Configure a header to define version
 configure_file (
-  "${PROJECT_SOURCE_DIR}/Version.hh.in"
-  "${PROJECT_SOURCE_DIR}/include/Version.hh"
+  "${PROJECT_SOURCE_DIR}/sbVersion.hh.in"
+  "${PROJECT_SOURCE_DIR}/include/sbVersion.hh"
   )
 
 #----------------------------------------------------------------------------

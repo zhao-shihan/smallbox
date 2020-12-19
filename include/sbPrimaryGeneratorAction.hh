@@ -1,5 +1,5 @@
-#ifndef PRIMARY_GENERATOR_ACTION_H
-#define PRIMARY_GENERATOR_ACTION_H 1
+#ifndef SB_PRIMARY_GENERATOR_ACTION_H
+#define SB_PRIMARY_GENERATOR_ACTION_H 1
 
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
