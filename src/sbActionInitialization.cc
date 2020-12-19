@@ -1,8 +1,4 @@
 #include "sbActionInitialization.hh"
-#include "sbPrimaryGeneratorAction.hh"
-#include "sbRunAction.hh"
-#include "sbEventAction.hh"
-#include "sbSteppingAction.hh"
 
 ActionInitialization::ActionInitialization() : G4VUserActionInitialization() {}
 

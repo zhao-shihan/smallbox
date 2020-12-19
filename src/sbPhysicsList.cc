@@ -1,18 +1,14 @@
 #include "sbPhysicsList.hh"
 
-#include "G4DecayPhysics.hh"
-#include "G4EmStandardPhysics.hh"
-#include "G4RadioactiveDecayPhysics.hh"
-
-PhysicsList::PhysicsList() : G4VModularPhysicsList() {
+sbPhysicsList::sbPhysicsList() : G4VModularPhysicsList() {
     SetVerboseLevel(1);
     RegisterPhysics(new G4DecayPhysics());
     RegisterPhysics(new G4EmStandardPhysics());
     RegisterPhysics(new G4RadioactiveDecayPhysics());
 }
 
-PhysicsList::~PhysicsList() {}
+sbPhysicsList::~sbPhysicsList() {}
 
-void PhysicsList::SetCuts() {
+void sbPhysicsList::SetCuts() {
     G4VUserPhysicsList::SetCuts();
 }

@@ -1,19 +1,5 @@
 #include "sbDetectorConstruction.hh"
 
-#include "G4RunManager.hh"
-#include "G4NistManager.hh"
-#include "G4Box.hh"
-#include "G4Cons.hh"
-#include "G4Orb.hh"
-#include "G4Sphere.hh"
-#include "G4Trd.hh"
-#include "G4LogicalVolume.hh"
-#include "G4PVPlacement.hh"
-#include "G4SystemOfUnits.hh"
-#include "G4SubtractionSolid.hh"
-#include "G4LogicalSkinSurface.hh"
-#include "G4OpticalSurface.hh"
-
 sbDetectorConstruction::sbDetectorConstruction() {}
 
 sbDetectorConstruction::~sbDetectorConstruction() {}

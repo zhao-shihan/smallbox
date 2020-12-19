@@ -3,6 +3,11 @@
 
 #include "G4VUserActionInitialization.hh"
 
+#include "sbPrimaryGeneratorAction.hh"
+#include "sbRunAction.hh"
+#include "sbEventAction.hh"
+#include "sbSteppingAction.hh"
+
 class ActionInitialization : public G4VUserActionInitialization {
 public:
     ActionInitialization();
