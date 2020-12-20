@@ -2,11 +2,26 @@
 #define SB_PHYSICS_LIST_H 1
 
 #include "G4VModularPhysicsList.hh"
-#include "G4DecayPhysics.hh"
-#include "G4EmStandardPhysics.hh"
-#include "G4RadioactiveDecayPhysics.hh"
 
-class secOpticalPhysics;
+#include "G4OpticalPhysics.hh"
+#include "G4DecayPhysics.hh"
+#include "G4SpinDecayPhysics.hh"
+#include "G4EmStandardPhysics.hh"
+#include "G4EmPenelopePhysics.hh"
+#include "G4HadronElasticPhysics.hh"
+#include "G4IonPhysics.hh"
+#include "G4StepLimiterPhysics.hh"
+
+#include "G4MuonPlus.hh"
+#include "G4MuonMinus.hh"
+#include "G4Electron.hh"
+#include "G4Positron.hh"
+#include "G4Region.hh"
+#include "G4RegionStore.hh"
+#include "G4SystemOfUnits.hh"
+#include "globals.hh"
+
+class G4OpticalPhysics;
 class G4DecayPhysics;
 class G4EmStandardPhysics;
 class G4HadronElasticPhysics;
@@ -20,12 +35,7 @@ public:
     virtual void SetCuts();
 
 private:
-    secOpticalPhysics* OpticalPhysics_init(void);
-    G4DecayPhysics* DecayPhysics_init(void);
-    G4EmStandardPhysics* EmPhysics_init(void);
-    G4HadronElasticPhysics* HadronElasticPhysics_init(void);
-    G4IonPhysics* IonPhysics_init(void);
-    G4StepLimiterPhysics* StepLimiter_init(void);
+    G4OpticalPhysics* OpticalPhysics_init(void);
 };
 
 #endif

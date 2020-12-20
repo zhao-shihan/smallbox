@@ -7,22 +7,18 @@ sbDetectorConstruction::~sbDetectorConstruction() {}
 G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4NistManager* nist = G4NistManager::Instance();
 
-    const G4double scintillator_centre_distance = 1.0 * cm;
-    const G4double scintillator_half_size[3]{ 5.0 * cm, 5.0 * cm, 0.5 * cm };
-    const G4double al_foil_thickness = 0.5 * mm;
-    const G4double world_radius = 1 * m;
-
+    const G4double world_radius = 1.0 * m;
     const G4String world_name("world");
     const G4String world_material_name("G4_AIR");
 
+    const G4double scintillator_half_size[3]{ 5.0 * cm, 5.0 * cm, 0.5 * cm };
+    const G4double scintillator_centre_distance = 1.0 * cm;
     const G4String scintillator_1_name("scintillator_1");
-    const G4ThreeVector scintillator_1_position(0.0 * cm, 0.0 * cm,
-        scintillator_centre_distance / 2.0 + scintillator_half_size[2]);
     const G4String scintillator_2_name("scintillator_2");
-    const G4ThreeVector scintillator_2_position(0.0 * cm, 0.0 * cm,
-        -scintillator_centre_distance / 2.0 - scintillator_half_size[2]);
     const G4String scintillator_material_name("plastic_scintillator");
 
+    const G4double al_foil_thickness = 0.5 * mm;
+    const G4double al_foil_hole_half_width = 5.0 * mm;
     const G4String al_foil_1_name("al_foil_1");
     const G4String al_foil_2_name("al_foil_2");
     const G4String al_foil_material_name("G4_Al");
@@ -51,7 +47,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         world_radius
     );
     const G4ThreeVector big_sphere_transition(0.0, 0.0,
-        -world_radius - (scintillator_centre_distance / 2.0 + 2.0 * scintillator_half_size[2]) - 1.0 * cm);
+        -world_radius - (scintillator_centre_distance / 2.0 + 2.0 * scintillator_half_size[2]) - 5.0 * cm);
     G4SubtractionSolid* solid_world = new G4SubtractionSolid(
         world_name,
         solid_big_sphere,
@@ -92,6 +88,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         dielectric_metal
     );
     ConstructScintillatorOpticalSurface(scintillator_material, scintillator_optical_surface);
+
+    // scintillators' position
+    //
+    const G4double scintillator_1_z_position = scintillator_centre_distance / 2.0 + scintillator_half_size[2];
+    const G4ThreeVector scintillator_1_position(0.0 * cm, 0.0 * cm, scintillator_1_z_position);
+    const G4ThreeVector scintillator_2_position(0.0 * cm, 0.0 * cm, -scintillator_1_z_position);
 
     // scintillator 1 construction
     //
@@ -165,6 +167,15 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     );
     ConstructAlFoilOpticalSurface(al_foil_material, al_foil_optical_surface);
 
+    // aluminum foil hole solid
+    //
+    G4Box* solid_hole = new G4Box(
+        al_foil_1_name + "_hole",
+        al_foil_hole_half_width,
+        al_foil_hole_half_width,
+        al_foil_thickness / 2.0
+    );
+
     // aluminum foil 1 construction
     //
     G4Box* solid_al_foil_1_and_scintillator = new G4Box(
@@ -173,10 +184,17 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         scintillator_half_size[1] + al_foil_thickness,
         scintillator_half_size[2] + al_foil_thickness
     );
-    G4SubtractionSolid* solid_al_foil_1 = new G4SubtractionSolid(
-        al_foil_1_name,
+    G4SubtractionSolid* solid_al_foil_1_without_hole = new G4SubtractionSolid(
+        al_foil_1_name + "_without_hole",
         solid_al_foil_1_and_scintillator,
         solid_scintillator_1
+    );
+    G4SubtractionSolid* solid_al_foil_1 = new G4SubtractionSolid(
+        al_foil_1_name,
+        solid_al_foil_1_without_hole,
+        solid_hole,
+        nullptr,
+        G4ThreeVector(0, 0, scintillator_half_size[2] + al_foil_thickness / 2.0)
     );
     G4LogicalVolume* logic_al_foil_1 = new G4LogicalVolume(
         solid_al_foil_1,
@@ -202,10 +220,17 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         scintillator_half_size[1] + al_foil_thickness,
         scintillator_half_size[2] + al_foil_thickness
     );
-    G4SubtractionSolid* solid_al_foil_2 = new G4SubtractionSolid(
-        al_foil_2_name,
+    G4SubtractionSolid* solid_al_foil_2_without_hole = new G4SubtractionSolid(
+        al_foil_2_name + "_without_hole",
         solid_al_foil_2_and_scintillator,
         solid_scintillator_2
+    );
+    G4SubtractionSolid* solid_al_foil_2 = new G4SubtractionSolid(
+        al_foil_2_name,
+        solid_al_foil_2_without_hole,
+        solid_hole,
+        nullptr,
+        G4ThreeVector(0, 0, -scintillator_half_size[2] - al_foil_thickness / 2.0)
     );
     G4LogicalVolume* logic_al_foil_2 = new G4LogicalVolume(
         solid_al_foil_2,

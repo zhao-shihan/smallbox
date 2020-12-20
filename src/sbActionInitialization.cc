@@ -10,7 +10,7 @@ void ActionInitialization::BuildForMaster() const {
 }
 
 void ActionInitialization::Build() const {
-    SetUserAction(new PrimaryGeneratorAction);
+    SetUserAction(new sbPrimaryGeneratorAction);
 
     RunAction* runAction = new RunAction;
     SetUserAction(runAction);
