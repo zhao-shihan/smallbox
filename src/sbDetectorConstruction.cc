@@ -6,23 +6,28 @@ sbDetectorConstruction::~sbDetectorConstruction() {}
 
 G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4NistManager* nist = G4NistManager::Instance();
-
+    // Set world's size, name, and materials
+    //
     const G4double world_radius = 1.0 * m;
     const G4String world_name("world");
     const G4String world_material_name("G4_AIR");
-
+    // Set scintillators' size, name, and materials
+    //
     const G4double scintillator_half_size[3]{ 5.0 * cm, 5.0 * cm, 0.5 * cm };
     const G4double scintillator_centre_distance = 1.0 * cm;
     const G4String scintillator_1_name("scintillator_1");
     const G4String scintillator_2_name("scintillator_2");
+    const G4String sensitive_detector_name("scintillator");
     const G4String scintillator_material_name("plastic_scintillator");
-
+    // Set aluminum foils' size, name, and materials
+    //
     const G4double al_foil_thickness = 0.5 * mm;
     const G4double al_foil_hole_half_width = 5.0 * mm;
     const G4String al_foil_1_name("al_foil_1");
     const G4String al_foil_2_name("al_foil_2");
     const G4String al_foil_material_name("G4_Al");
-
+    // Set if check overlaps
+    //
     const G4bool check_overlaps = true;
 
     // world material
@@ -123,6 +128,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_scintillator_1,
         scintillator_optical_surface
     );
+    ConstructScintillatorsAsSensitiveDetector(scintillator_1_name, sensitive_detector_name);
 
     // scintillator 2 construction
     //
@@ -152,6 +158,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_scintillator_2,
         scintillator_optical_surface
     );
+    ConstructScintillatorsAsSensitiveDetector(scintillator_1_name, sensitive_detector_name);
 
     // aluminum foil material
     //
@@ -249,6 +256,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     );
 
     return physical_world;
+}
+
+void sbDetectorConstruction::ConstructScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
+    const G4String& sensitive_detector_name) {
+    sbTrackerSD* aTrackerSD = new sbTrackerSD(sensitive_detector_name, "TrackerHitsCollection");
+    G4SDManager::GetSDMpointer()->AddNewDetector(aTrackerSD);
+    SetSensitiveDetector(scintillator_name, aTrackerSD, true);
 }
 
 void sbDetectorConstruction::ConstructScintillatorOpticalSurface(G4Material*& scintillator_material, G4OpticalSurface*&) {

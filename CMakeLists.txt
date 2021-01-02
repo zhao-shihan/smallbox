@@ -53,8 +53,7 @@ set(SCRIPTS
   smallbox.in
   smallbox.out
   init_vis.mac
-  run1.mac
-  run2.mac
+  run.mac
   vis.mac
   )
 

@@ -17,6 +17,9 @@
 #include "G4SubtractionSolid.hh"
 #include "G4LogicalSkinSurface.hh"
 #include "G4OpticalSurface.hh"
+#include "G4SDManager.hh"
+
+#include "sbTrackerSD.hh"
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
@@ -27,6 +30,8 @@ public:
     virtual ~sbDetectorConstruction();
 
     virtual G4VPhysicalVolume* Construct();
+    void ConstructScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
+        const G4String& sensitive_detector_name);
     void ConstructScintillatorOpticalSurface(G4Material*& scintillator_material, G4OpticalSurface*&);
     void ConstructAlFoilOpticalSurface(G4Material*&, G4OpticalSurface*& surface);
 };
