@@ -8,7 +8,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4NistManager* nist = G4NistManager::Instance();
     // Set world's size, name, and materials
     //
-    const G4double world_radius = 1.0 * m;
+    const G4double world_radius = 1.1 * m;
     const G4String world_name("world");
     const G4String world_material_name("G4_AIR");
     // Set scintillators' size, name, and materials
@@ -39,7 +39,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4Sphere* solid_big_sphere = new G4Sphere(
         "big_sphere",
         0.0,
-        world_radius + 1 * cm,
+        world_radius,
         0.0,
         360 * deg,
         0.0,

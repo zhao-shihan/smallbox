@@ -1,4 +1,3 @@
-#pragma once
 #ifndef SB_DETECTOR_CONSTRUCTION_H
 #define SB_DETECTOR_CONSTRUCTION_H 1
 

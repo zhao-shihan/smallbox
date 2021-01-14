@@ -1,5 +1,5 @@
 #ifndef SB_TRACKERSD_H
-#define SB_TRACKERSD_H
+#define SB_TRACKERSD_H 1
 
 #include "G4VSensitiveDetector.hh"
 #include "G4HCofThisEvent.hh"

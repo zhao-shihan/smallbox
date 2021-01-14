@@ -1,5 +1,5 @@
 #ifndef SB_TRACKER_HIT_H
-#define SB_TRACKER_HIT_H
+#define SB_TRACKER_HIT_H 1
 
 #include <iomanip>
 

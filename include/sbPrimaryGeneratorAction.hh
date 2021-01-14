@@ -30,8 +30,9 @@ public:
     inline const G4ParticleGun* GetParticleGun() const { return pParticleGun; }
 
 private:
-    inline G4ThreeVector CosmicMuonMomentumDirection();
-    inline G4double CosmicMuonZenithAngleDistribution(G4double theta);
+    inline G4ThreeVector RandomUpperHalfSpherePosition() const;
+    inline G4ThreeVector CosmicMuonMomentumDirection() const;
+    inline G4double CosmicMuonZenithAngleDistribution(const G4double& theta) const;
     G4ParticleGun* pParticleGun; // pointer a to G4 gun class
 };
 
