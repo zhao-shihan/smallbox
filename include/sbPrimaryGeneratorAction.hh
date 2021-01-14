@@ -33,7 +33,6 @@ private:
     inline G4ThreeVector CosmicMuonMomentumDirection();
     inline G4double CosmicMuonZenithAngleDistribution(G4double theta);
     G4ParticleGun* pParticleGun; // pointer a to G4 gun class
-    G4Sphere* solid_world_;
 };
 
 #endif

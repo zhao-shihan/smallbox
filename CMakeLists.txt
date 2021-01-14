@@ -1,16 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (smallbox)
 
-# Set version
-set (SB_VERSION_MAJOR 1)
-set (SB_VERSION_MINOR 0)
-
-# Configure a header to define version
-configure_file (
-  "${PROJECT_SOURCE_DIR}/sbVersion.hh.in"
-  "${PROJECT_SOURCE_DIR}/include/sbVersion.hh"
-  )
-
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
 # You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
@@ -50,8 +40,6 @@ target_link_libraries(smallbox ${Geant4_LIBRARIES})
 # relies on these scripts being in the current working directory.
 #
 set(SCRIPTS
-  smallbox.in
-  smallbox.out
   init_vis.mac
   run.mac
   vis.mac

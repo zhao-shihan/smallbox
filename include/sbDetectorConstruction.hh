@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SB_DETECTOR_CONSTRUCTION_H
 #define SB_DETECTOR_CONSTRUCTION_H 1
 
@@ -20,6 +21,7 @@
 #include "G4SDManager.hh"
 
 #include "sbTrackerSD.hh"
+#include "sbFunctionSwitch.hh"
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
@@ -32,8 +34,8 @@ public:
     virtual G4VPhysicalVolume* Construct();
     void ConstructScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
         const G4String& sensitive_detector_name);
-    void ConstructScintillatorOpticalSurface(G4Material*& scintillator_material, G4OpticalSurface*&);
-    void ConstructAlFoilOpticalSurface(G4Material*&, G4OpticalSurface*& surface);
+    void ConstructScintillatorOptics(G4Material*& scintillator_material, G4OpticalSurface*&);
+    void ConstructAlFoilOptics(G4Material*&, G4OpticalSurface*& surface);
 };
 
 #endif

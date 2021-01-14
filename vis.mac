@@ -1,26 +1,8 @@
 # Macro file for the visualization setting in the initialization phase 
 # of the test when running in interactive mode
 #
-
-# Use these open statements to open selected visualization
-#
-# Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
-#
-# Use this open statement to create an OpenInventor view:
-#/vis/open OI
-#
-# Use this open statement to create a .prim file suitable for
-# viewing in DAWN:
-#/vis/open DAWNFILE
-#
-# Use this open statement to create a .heprep file suitable for
-# viewing in HepRApp:
-#/vis/open HepRepFile
-#
-# Use this open statement to create a .wrl file suitable for
-# viewing in a VRML viewer:
-#/vis/open VRML2FILE
+/vis/ogl/set/displayListLimit 100000
 #
 # Disable auto refresh and quieten vis messages whilst scene and
 # trajectories are established:
@@ -47,19 +29,13 @@
 /vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 2
 #
 # To superimpose all of the events from a given run:
-/vis/scene/endOfEventAction accumulate
-#
-# Axes, etc.
-#/vis/scene/add/axes    # Simple axes: x=red, y=green, z=blue.
-/vis/scene/add/eventID # Drawn at end of event
+/vis/scene/endOfEventAction accumulate -1
 #
 # To get nice view
-# Make the "World" box invisible
+# Make the "world" invisible
 #/vis/geometry/set/visibility world 0 false
 #
 # Re-establish auto refreshing and verbosity:
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings
-#
-# For file-based drivers, use this to create an empty detector view:
-#/vis/viewer/flush
+

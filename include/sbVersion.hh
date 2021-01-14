@@ -1,3 +1,0 @@
-#define SB_VERSION_MAJOR 
-#define SB_VERSION_MINOR 
-

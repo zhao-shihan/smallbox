@@ -39,7 +39,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4Sphere* solid_big_sphere = new G4Sphere(
         "big_sphere",
         0.0,
-        world_radius,
+        world_radius + 1 * cm,
         0.0,
         360 * deg,
         0.0,
@@ -90,9 +90,9 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         "scintillator_optical_surface",
         unified,
         polished,
-        dielectric_metal
+        dielectric_dielectric
     );
-    ConstructScintillatorOpticalSurface(scintillator_material, scintillator_optical_surface);
+    ConstructScintillatorOptics(scintillator_material, scintillator_optical_surface);
 
     // scintillators' position
     //
@@ -172,7 +172,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         polished,
         dielectric_metal
     );
-    ConstructAlFoilOpticalSurface(al_foil_material, al_foil_optical_surface);
+    ConstructAlFoilOptics(al_foil_material, al_foil_optical_surface);
 
     // aluminum foil hole solid
     //
@@ -265,7 +265,7 @@ void sbDetectorConstruction::ConstructScintillatorsAsSensitiveDetector(const G4S
     SetSensitiveDetector(scintillator_name, aTrackerSD, true);
 }
 
-void sbDetectorConstruction::ConstructScintillatorOpticalSurface(G4Material*& scintillator_material, G4OpticalSurface*&) {
+void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillator_material, G4OpticalSurface*&) {
     // the mathematical functions of the optical properties of the scintillator
     // absorption
     G4double scintillator_absorbtion_energy[502] =
@@ -397,12 +397,12 @@ void sbDetectorConstruction::ConstructScintillatorOpticalSurface(G4Material*& sc
         0.00132 * m,  0.00126 * m,  0.00121 * m,  0.00115 * m,  0.00108 * m,  0.00102 * m,  0.00095 * m,  0.00088 * m,
         0.00077 * m,  0.00070 * m,  0.00062 * m,  0.00055 * m,  0.00048 * m,  0.000001 * m, 0.000001 * m, 0.000001 * m };
 
-    // reflection
-    G4double scintRefIndexEnergy[18] =
+    // refraction
+    G4double scintRefractionIndexEnergy[18] =
     { 1.55 * eV, 1.79505 * eV, 2.10499 * eV, 2.27077 * eV, 2.55111 * eV, 2.84498 * eV, 3.06361 * eV, 4.13281 * eV,
         6.20 * eV, 6.526 * eV, 6.889 * eV, 7.294 * eV, 7.75 * eV, 8.267 * eV, 8.857 * eV, 9.538 * eV, 10.33 * eV,
         15.5 * eV };
-    G4double scintRefIndex[18] = { 1.4781, 1.48, 1.4842, 1.4861, 1.4915, 1.4955, 1.4988, 1.5264, 1.6185, 1.6176,
+    G4double scintRefractionIndex[18] = { 1.4781, 1.48, 1.4842, 1.4861, 1.4915, 1.4955, 1.4988, 1.5264, 1.6185, 1.6176,
         1.5270, 1.5545, 1.793, 1.7826, 1.6642, 1.5545, 1.4536, 1.4536 };
 
     // reemittion
@@ -493,7 +493,7 @@ void sbDetectorConstruction::ConstructScintillatorOpticalSurface(G4Material*& sc
 
     auto MPTscint = new G4MaterialPropertiesTable();
 
-    MPTscint->AddProperty("RINDEX", scintRefIndexEnergy, scintRefIndex, 18);
+    MPTscint->AddProperty("RINDEX", scintRefractionIndexEnergy, scintRefractionIndex, 18);
     MPTscint->AddProperty("ABSLENGTH", scintillator_absorbtion_energy, scintillator_absorbtion_length, 502);
     MPTscint->AddProperty("RAYLEIGH", scintRayEnergy, scintRayLength, 11);
 
@@ -527,10 +527,14 @@ void sbDetectorConstruction::ConstructScintillatorOpticalSurface(G4Material*& sc
 
 }
 
-void sbDetectorConstruction::ConstructAlFoilOpticalSurface(G4Material*&, G4OpticalSurface*& surface) {
+void sbDetectorConstruction::ConstructAlFoilOptics(G4Material*&, G4OpticalSurface*& surface) {
     //reflection: photon energy vs. reflectivity
     G4double FoilReflectEneg[6] = { 2. * eV, 3. * eV, 4. * eV, 5. * eV, 6. * eV, 7. * eV };
+#if ENABLE_SURFACE_REFLECTION
     G4double FoilReflectivity[6] = { 0.9, 0.9, 0.9, 0.9, 0.9, 0.9 };
+#else
+    G4double FoilReflectivity[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+#endif
 
     auto FoilTable = new G4MaterialPropertiesTable();
     FoilTable->AddProperty("REFLECTIVITY", FoilReflectEneg, FoilReflectivity, 6);
