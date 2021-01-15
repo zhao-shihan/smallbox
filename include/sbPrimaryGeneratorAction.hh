@@ -1,8 +1,6 @@
 #ifndef SB_PRIMARY_GENERATOR_ACTION_H
 #define SB_PRIMARY_GENERATOR_ACTION_H 1
 
-#include "sbDetectorConstruction.hh"
-
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4ParticleGun.hh"
 #include "globals.hh"
@@ -17,23 +15,29 @@
 #include "G4Sphere.hh"
 #include "Randomize.hh"
 
+#include "sbDetectorConstruction.hh"
+#include "sbInterpolatingFunction.hh"
+
 class sbDetectorConstruction;
 class G4ParticleGun;
 class G4Event;
 class G4Sphere;
 
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
+private:
+    G4ParticleGun* particle_gun;
+    sbInterpolatingFunction* cosmic_muon_zenith_angle_distribution;
+
 public:
     sbPrimaryGeneratorAction();
     virtual ~sbPrimaryGeneratorAction();
     virtual void GeneratePrimaries(G4Event*);
-    inline const G4ParticleGun* GetParticleGun() const { return pParticleGun; }
+    inline const G4ParticleGun* GetParticleGun() const { return particle_gun; }
 
 private:
     inline G4ThreeVector RandomUpperHalfSpherePosition() const;
     inline G4ThreeVector CosmicMuonMomentumDirection() const;
     inline G4double CosmicMuonZenithAngleDistribution(const G4double& theta) const;
-    G4ParticleGun* pParticleGun; // pointer a to G4 gun class
 };
 
 #endif

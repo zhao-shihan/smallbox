@@ -1,52 +1,41 @@
 #include "sbPrimaryGeneratorAction.hh"
 
 sbPrimaryGeneratorAction::sbPrimaryGeneratorAction() :
-    G4VUserPrimaryGeneratorAction() {
-    G4int n_particle = 1;
-    pParticleGun = new G4ParticleGun(n_particle);
-}
+    G4VUserPrimaryGeneratorAction(),
+    particle_gun(new G4ParticleGun(1)),
+    cosmic_muon_zenith_angle_distribution(
+        new sbInterpolatingFunction("data/cosmic_muon_zenith_angle_distribution_CDF_inverse.csv", 100)) {}
 
 sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
-    delete pParticleGun;
+    delete particle_gun;
+    delete cosmic_muon_zenith_angle_distribution;
 }
 
 void sbPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     if (G4UniformRand() > 0.545) {
-        pParticleGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu-"));
+        particle_gun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu-"));
     } else {
-        pParticleGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu+"));
+        particle_gun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu+"));
     }
-    pParticleGun->SetParticlePosition(RandomUpperHalfSpherePosition());
-    pParticleGun->SetParticleEnergy(10.0 * MeV);
-    pParticleGun->SetParticleMomentumDirection(CosmicMuonMomentumDirection());
+    particle_gun->SetParticlePosition(RandomUpperHalfSpherePosition());
+    particle_gun->SetParticleEnergy(10.0 * MeV);
+    particle_gun->SetParticleMomentumDirection(CosmicMuonMomentumDirection());
 
-    pParticleGun->GeneratePrimaryVertex(anEvent);
+    particle_gun->GeneratePrimaryVertex(anEvent);
 }
 
 inline G4ThreeVector sbPrimaryGeneratorAction::RandomUpperHalfSpherePosition() const {
     const G4double radius = 1.0 * m;
-    const G4double phi = M_PI * (2.0 * G4UniformRand() - 1);
+    G4double phi = M_PI * (2.0 * G4UniformRand() - 1);
     G4double theta = M_PI_2 * G4UniformRand();
     G4double sin_theta = sin(theta);
-    G4double x0 = radius * sin_theta * cos(phi);
-    G4double y0 = radius * sin_theta * sin(phi);
-    G4double z0 = radius * cos(theta);
-    return G4ThreeVector(x0, y0, z0);
+    return G4ThreeVector(radius * sin_theta * cos(phi), radius * sin_theta * sin(phi), radius * cos(theta));
 }
 
 inline G4ThreeVector sbPrimaryGeneratorAction::CosmicMuonMomentumDirection() const {
-    G4double theta, y, phi;
-    do {
-        theta = M_PI_2 * G4UniformRand();
-        y = M_2_PI * G4UniformRand();
-    } while (y > this->CosmicMuonZenithAngleDistribution(theta));
-    phi = M_PI * (2 * G4UniformRand() - 1);
+    G4double phi = M_PI * (2 * G4UniformRand() - 1);
+    G4double theta = (*cosmic_muon_zenith_angle_distribution)(G4UniformRand());
     G4double sin_theta = sin(theta);
     return G4ThreeVector(sin_theta * cos(phi), sin_theta * sin(phi), -cos(theta));
-}
-
-inline G4double sbPrimaryGeneratorAction::CosmicMuonZenithAngleDistribution(const G4double& theta) const {
-    G4double sin_theta = sin(theta);
-    return M_2_PI * sin_theta * sin_theta;
 }
 

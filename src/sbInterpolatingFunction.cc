@@ -11,14 +11,14 @@ sbInterpolatingFunction::sbInterpolatingFunction(const char file_name[], size_t 
             fin.get();
         }
         fin.close();
+        std::sort(data_.begin(), data_.end());
+    } else {
+        G4ExceptionDescription error_message;
+        error_message << file_name << "not found.\n";
+        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "MyCode0002",
+            FatalException, error_message);
     }
 }
 
 // ToDo: sbInterpolatingFunction::sbInterpolatingFunction(const vector<G4double>& x, const vector<G4double>& y) {}
-
-sbInterpolatingFunction::~sbInterpolatingFunction() {}
-
-inline G4double sbInterpolatingFunction::Interpolating(const G4double& x) const {
-    // ToDo
-}
 
