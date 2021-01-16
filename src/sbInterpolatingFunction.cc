@@ -4,8 +4,8 @@ sbInterpolatingFunction::sbInterpolatingFunction(const char file_name[], size_t 
     data_(size) {
     if (size < 2) {
         G4ExceptionDescription error_message;
-        error_message << "Interpolating points number is less than 2.\n";
-        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "sbIF001",
+        error_message << "Interpolating points number is less than 2." << std::endl;
+        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "Invalid data",
             FatalException, error_message);
     }
     std::ifstream fin(file_name);
@@ -20,8 +20,10 @@ sbInterpolatingFunction::sbInterpolatingFunction(const char file_name[], size_t 
         std::sort(data_.begin(), data_.end());
     } else {
         G4ExceptionDescription error_message;
-        error_message << file_name << "not found.\n";
-        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "sbIF002",
+        error_message << "Data file:" << std::endl;
+        error_message << file_name << std::endl;
+        error_message << "not found." << std::endl;
+        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "Data file not found",
             FatalException, error_message);
     }
 }

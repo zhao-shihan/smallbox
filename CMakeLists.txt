@@ -43,6 +43,8 @@ set(SCRIPTS
   init_vis.mac
   run.mac
   vis.mac
+  cosmic_muon_energy_spectrum_CDF_inverse.csv
+  cosmic_muon_zenith_angle_distribution_CDF_inverse.csv
   )
 
 foreach(_script ${SCRIPTS})
