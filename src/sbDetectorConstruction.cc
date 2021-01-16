@@ -8,27 +8,28 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4NistManager* nist = G4NistManager::Instance();
     // Set world's size, name, and materials
     //
-    const G4double world_radius = 1.1 * m;
+    constexpr G4double world_radius = 1.1 * m;
     const G4String world_name("world");
     const G4String world_material_name("G4_AIR");
     // Set scintillators' size, name, and materials
     //
-    const G4double scintillator_half_size[3]{ 5.0 * cm, 5.0 * cm, 0.5 * cm };
-    const G4double scintillator_centre_distance = 1.0 * cm;
+    constexpr G4double scintillator_half_size[3] = { 5.0 * cm, 5.0 * cm, 0.5 * cm };
+    constexpr G4double scintillator_centre_distance = 1.0 * cm;
     const G4String scintillator_1_name("scintillator_1");
     const G4String scintillator_2_name("scintillator_2");
     const G4String sensitive_detector_name("scintillator");
     const G4String scintillator_material_name("plastic_scintillator");
     // Set aluminum foils' size, name, and materials
     //
-    const G4double al_foil_thickness = 0.5 * mm;
-    const G4double al_foil_hole_half_width = 5.0 * mm;
+    constexpr G4double al_foil_thickness = 0.5 * mm;
+    constexpr G4double al_foil_hole_half_width = 5.0 * mm;
     const G4String al_foil_1_name("al_foil_1");
     const G4String al_foil_2_name("al_foil_2");
     const G4String al_foil_material_name("G4_Al");
+
     // Set if check overlaps
     //
-    const G4bool check_overlaps = true;
+    constexpr G4bool enable_check_overlaps = true;
 
     // world material
     //
@@ -73,7 +74,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         0,
         false,
         0,
-        check_overlaps
+        enable_check_overlaps
     );
 
     // scintillator material
@@ -121,7 +122,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_world,
         false,
         0,
-        check_overlaps
+        enable_check_overlaps
     );
     G4LogicalSkinSurface* logical_scintillator_1_surface = new G4LogicalSkinSurface(
         scintillator_1_name + "_surface",
@@ -151,7 +152,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_world,
         false,
         0,
-        check_overlaps
+        enable_check_overlaps
     );
     G4LogicalSkinSurface* logical_scintillator_2_surface = new G4LogicalSkinSurface(
         scintillator_2_name + "_surface",
@@ -216,7 +217,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_world,
         false,
         0,
-        check_overlaps
+        enable_check_overlaps
     );
 
     // aluminum foil 2 construction
@@ -252,7 +253,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logical_world,
         false,
         0,
-        check_overlaps
+        enable_check_overlaps
     );
 
     return physical_world;

@@ -27,6 +27,7 @@ class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
     G4ParticleGun* particle_gun;
     sbInterpolatingFunction* cosmic_muon_zenith_angle_distribution;
+    sbInterpolatingFunction* cosmic_muon_energy_spectrum;
 
 public:
     sbPrimaryGeneratorAction();
@@ -37,7 +38,7 @@ public:
 private:
     inline G4ThreeVector RandomUpperHalfSpherePosition() const;
     inline G4ThreeVector CosmicMuonMomentumDirection() const;
-    inline G4double CosmicMuonZenithAngleDistribution(const G4double& theta) const;
+    inline G4double CosmicMuonEnergySpectrum() const;
 };
 
 #endif
