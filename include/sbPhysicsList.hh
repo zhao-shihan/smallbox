@@ -37,7 +37,9 @@ public:
     virtual void SetCuts();
 
 private:
+#if SB_ENABLE_OPTICAL_PHYSICS
     G4OpticalPhysics* OpticalPhysics_init(void);
+#endif
 };
 
 #endif

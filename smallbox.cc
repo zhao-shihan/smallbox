@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     // Set mandatory initialization classes
     //
     // Detector construction
-    runManager->SetUserInitialization(new sbDetectorConstruction());
+    runManager->SetUserInitialization(sbDetectorConstruction::GetInstance());
 
     // Physics list
     G4VModularPhysicsList* physicsList = new sbPhysicsList();

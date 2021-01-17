@@ -25,15 +25,15 @@ class G4Sphere;
 
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
-    G4ParticleGun* particle_gun;
-    sbInterpolatingFunction* cosmic_muon_zenith_angle_distribution;
-    sbInterpolatingFunction* cosmic_muon_energy_spectrum;
+    G4ParticleGun* particle_gun_;
+    sbInterpolatingFunction* cosmic_muon_zenith_angle_distribution_;
+    sbInterpolatingFunction* cosmic_muon_energy_spectrum_;
 
 public:
     sbPrimaryGeneratorAction();
     virtual ~sbPrimaryGeneratorAction();
     virtual void GeneratePrimaries(G4Event*);
-    inline const G4ParticleGun* GetParticleGun() const { return particle_gun; }
+    inline const G4ParticleGun* GetParticleGun() const { return particle_gun_; }
 
 private:
     inline G4ThreeVector RandomUpperHalfSpherePosition() const;

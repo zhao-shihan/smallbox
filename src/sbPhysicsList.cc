@@ -1,7 +1,9 @@
 #include "sbPhysicsList.hh"
 
 sbPhysicsList::sbPhysicsList() : G4VModularPhysicsList() {
+#if SB_ENABLE_OPTICAL_PHYSICS
     RegisterPhysics(OpticalPhysics_init());
+#endif
 
     //G4SpinDecayPhysics depends on G4DecayPhysics.
     RegisterPhysics(new G4DecayPhysics());
@@ -17,6 +19,7 @@ void sbPhysicsList::SetCuts() {
     G4VUserPhysicsList::SetCuts();
 }
 
+#if SB_ENABLE_OPTICAL_PHYSICS
 G4OpticalPhysics* sbPhysicsList::OpticalPhysics_init() {
     auto pOptics = new G4OpticalPhysics;
 
@@ -36,4 +39,5 @@ G4OpticalPhysics* sbPhysicsList::OpticalPhysics_init() {
 
     return pOptics;
 }
+#endif
 

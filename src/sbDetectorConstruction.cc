@@ -1,46 +1,51 @@
 #include "sbDetectorConstruction.hh"
 
-sbDetectorConstruction::sbDetectorConstruction() {}
+sbDetectorConstruction* sbDetectorConstruction::instance_ = nullptr;
 
-sbDetectorConstruction::~sbDetectorConstruction() {}
-
-G4VPhysicalVolume* sbDetectorConstruction::Construct() {
-    G4NistManager* nist = G4NistManager::Instance();
+sbDetectorConstruction::sbDetectorConstruction() :
+    nist(G4NistManager::Instance()),
     // Set world's size, name, and materials
     //
-    constexpr G4double world_radius = 1.1 * m;
-    const G4String world_name("world");
-    const G4String world_material_name("G4_AIR");
+    world_radius_(1.1 * m),
+    world_name_("world"),
+    world_material_name_("G4_AIR"),
     // Set scintillators' size, name, and materials
     //
-    constexpr G4double scintillator_half_size[3] = { 5.0 * cm, 5.0 * cm, 0.5 * cm };
-    constexpr G4double scintillator_centre_distance = 1.0 * cm;
-    const G4String scintillator_1_name("scintillator_1");
-    const G4String scintillator_2_name("scintillator_2");
-    const G4String sensitive_detector_name("scintillator");
-    const G4String scintillator_material_name("plastic_scintillator");
+    scintillator_half_size_{ 5.0 * cm, 5.0 * cm, 0.5 * cm },
+    scintillator_centre_distance_(1.0 * cm),
+    scintillator_1_name_("scintillator_1"),
+    scintillator_2_name_("scintillator_2"),
+    sensitive_detector_name_("scintillator"),
+    scintillator_material_name_("plastic_scintillator"),
     // Set aluminum foils' size, name, and materials
     //
-    constexpr G4double al_foil_thickness = 0.5 * mm;
-    constexpr G4double al_foil_hole_half_width = 5.0 * mm;
-    const G4String al_foil_1_name("al_foil_1");
-    const G4String al_foil_2_name("al_foil_2");
-    const G4String al_foil_material_name("G4_Al");
+    al_foil_thickness_(0.1 * mm),
+    al_foil_hole_half_width_(5 * mm),
+    al_foil_scintillator_gap_(10 * um),
+    al_foil_1_name_("al_foil_1"),
+    al_foil_2_name_("al_foil_2"),
+    al_foil_material_name_("G4_Al") {}
 
+G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // Set if check overlaps
     //
     constexpr G4bool enable_check_overlaps = true;
 
+#pragma region construct_world
     // world material
     //
-    G4Material* world_material = nist->FindOrBuildMaterial(world_material_name);
+    G4Material* world_material = nist->FindOrBuildMaterial(world_material_name_);
+
+#if SB_ENABLE_OPTICAL_PHYSICS
+    SetWorldOpticalProperties(world_material);
+#endif
 
     // world construction
     //
     G4Sphere* solid_big_sphere = new G4Sphere(
         "big_sphere",
         0.0,
-        world_radius,
+        world_radius_,
         0.0,
         360 * deg,
         0.0,
@@ -48,14 +53,14 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     );
     G4Box* solid_big_box = new G4Box(
         "big_box",
-        world_radius,
-        world_radius,
-        world_radius
+        world_radius_,
+        world_radius_,
+        world_radius_
     );
     const G4ThreeVector big_sphere_transition(0.0, 0.0,
-        -world_radius - (scintillator_centre_distance / 2.0 + 2.0 * scintillator_half_size[2]) - 5.0 * cm);
+        -world_radius_ - (scintillator_centre_distance_ / 2.0 + 2.0 * scintillator_half_size_[2]) - 5.0 * cm);
     G4SubtractionSolid* solid_world = new G4SubtractionSolid(
-        world_name,
+        world_name_,
         solid_big_sphere,
         solid_big_box,
         nullptr,
@@ -64,107 +69,88 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4LogicalVolume* logical_world = new G4LogicalVolume(
         solid_world,
         world_material,
-        world_name
+        world_name_
     );
+
     G4VPhysicalVolume* physical_world = new G4PVPlacement(
         0,
         G4ThreeVector(),
         logical_world,
-        world_name,
+        world_name_,
         0,
         false,
         0,
         enable_check_overlaps
     );
+#pragma endregion
 
+#pragma region construct_scintillators
     // scintillator material
     //
-    G4Material* scintillator_material = new G4Material(scintillator_material_name, 1.032 * g / cm3, 2, kStateSolid);
+    G4Material* scintillator_material = new G4Material(scintillator_material_name_, 1.032 * g / cm3, 2, kStateSolid);
     G4Element* element_H = new G4Element("Hydrogen", "H", 1.0, 1.008 * g / mole);
     G4Element* element_C = new G4Element("Carbon", "C", 6.0, 12.01 * g / mole);
     scintillator_material->AddElement(element_C, 9);
     scintillator_material->AddElement(element_H, 10);
 
-    // scintillator optical surface
+#if SB_ENABLE_OPTICAL_PHYSICS
+    SetScintillatorOpticalProperties(scintillator_material);
+#endif
+
+    // solid & logical scintillator construction
     //
-    G4OpticalSurface* scintillator_optical_surface = new G4OpticalSurface(
-        "scintillator_optical_surface",
-        unified,
-        polished,
-        dielectric_dielectric
+    G4Box* solid_scintillator = new G4Box(
+        "scintillator",
+        scintillator_half_size_[0],
+        scintillator_half_size_[1],
+        scintillator_half_size_[2]
     );
-    ConstructScintillatorOptics(scintillator_material, scintillator_optical_surface);
+    G4LogicalVolume* logical_scintillator = new G4LogicalVolume(
+        solid_scintillator,
+        scintillator_material,
+        "scintillator"
+    );
+    SetScintillatorsAsSensitiveDetector("scintillator", sensitive_detector_name_);
 
     // scintillators' position
     //
-    const G4double scintillator_1_z_position = scintillator_centre_distance / 2.0 + scintillator_half_size[2];
+    const G4double scintillator_1_z_position = scintillator_centre_distance_ / 2.0 + scintillator_half_size_[2];
     const G4ThreeVector scintillator_1_position(0.0 * cm, 0.0 * cm, scintillator_1_z_position);
     const G4ThreeVector scintillator_2_position(0.0 * cm, 0.0 * cm, -scintillator_1_z_position);
 
-    // scintillator 1 construction
+    // physical scintillator 1 construction
     //
-    G4Box* solid_scintillator_1 = new G4Box(
-        scintillator_1_name,
-        scintillator_half_size[0],
-        scintillator_half_size[1],
-        scintillator_half_size[2]
-    );
-    G4LogicalVolume* logical_scintillator_1 = new G4LogicalVolume(
-        solid_scintillator_1,
-        scintillator_material,
-        scintillator_1_name
-    );
     G4VPhysicalVolume* physical_scintillator_1 = new G4PVPlacement(
         0,
         scintillator_1_position,
-        logical_scintillator_1,
-        scintillator_1_name,
+        logical_scintillator,
+        scintillator_1_name_,
         logical_world,
         false,
         0,
         enable_check_overlaps
     );
-    G4LogicalSkinSurface* logical_scintillator_1_surface = new G4LogicalSkinSurface(
-        scintillator_1_name + "_surface",
-        logical_scintillator_1,
-        scintillator_optical_surface
-    );
-    ConstructScintillatorsAsSensitiveDetector(scintillator_1_name, sensitive_detector_name);
 
-    // scintillator 2 construction
+    // physical scintillator 2 construction
     //
-    G4Box* solid_scintillator_2 = new G4Box(
-        scintillator_2_name,
-        scintillator_half_size[0],
-        scintillator_half_size[1],
-        scintillator_half_size[2]
-    );
-    G4LogicalVolume* logical_scintillator_2 = new G4LogicalVolume(
-        solid_scintillator_2,
-        scintillator_material,
-        scintillator_2_name
-    );
     G4VPhysicalVolume* physical_scintillator_2 = new G4PVPlacement(
         0,
         scintillator_2_position,
-        logical_scintillator_2,
-        scintillator_2_name,
+        logical_scintillator,
+        scintillator_2_name_,
         logical_world,
         false,
         0,
         enable_check_overlaps
     );
-    G4LogicalSkinSurface* logical_scintillator_2_surface = new G4LogicalSkinSurface(
-        scintillator_2_name + "_surface",
-        logical_scintillator_2,
-        scintillator_optical_surface
-    );
-    ConstructScintillatorsAsSensitiveDetector(scintillator_1_name, sensitive_detector_name);
+#pragma endregion
 
+#pragma region construct_al_foils
     // aluminum foil material
     //
-    G4Material* al_foil_material = nist->FindOrBuildMaterial(al_foil_material_name);
+    G4Material* al_foil_material = nist->FindOrBuildMaterial(al_foil_material_name_);
 
+#if SB_ENABLE_OPTICAL_PHYSICS
     // aluminum foil optical surface
     //
     G4OpticalSurface* al_foil_optical_surface = new G4OpticalSurface(
@@ -173,47 +159,54 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         polished,
         dielectric_metal
     );
-    ConstructAlFoilOptics(al_foil_material, al_foil_optical_surface);
+    SetAlFoilOpticalProperties(al_foil_optical_surface);
+#endif
 
-    // aluminum foil hole solid
+    // solid & logical aluminum foil construction
     //
+    G4Box* solid_al_foil_and_scintillator = new G4Box(
+        "al_foil_and_scintillator",
+        scintillator_half_size_[0] + al_foil_scintillator_gap_ + al_foil_thickness_,
+        scintillator_half_size_[1] + al_foil_scintillator_gap_ + al_foil_thickness_,
+        scintillator_half_size_[2] + al_foil_scintillator_gap_ + al_foil_thickness_
+    );
+    G4Box* solid_volume_inside_al_foil = new G4Box(
+        "al_foil_subtrahend",
+        scintillator_half_size_[0] + al_foil_scintillator_gap_,
+        scintillator_half_size_[1] + al_foil_scintillator_gap_,
+        scintillator_half_size_[2] + al_foil_scintillator_gap_
+    );
+    G4SubtractionSolid* solid_al_foil_without_hole = new G4SubtractionSolid(
+        "al_foil_without_hole",
+        solid_al_foil_and_scintillator,
+        solid_volume_inside_al_foil
+    );
     G4Box* solid_hole = new G4Box(
-        al_foil_1_name + "_hole",
-        al_foil_hole_half_width,
-        al_foil_hole_half_width,
-        al_foil_thickness / 2.0
+        "al_foil_hole",
+        al_foil_hole_half_width_,
+        al_foil_hole_half_width_,
+        0.5 * al_foil_thickness_
     );
 
     // aluminum foil 1 construction
     //
-    G4Box* solid_al_foil_1_and_scintillator = new G4Box(
-        al_foil_1_name + scintillator_1_name,
-        scintillator_half_size[0] + al_foil_thickness,
-        scintillator_half_size[1] + al_foil_thickness,
-        scintillator_half_size[2] + al_foil_thickness
-    );
-    G4SubtractionSolid* solid_al_foil_1_without_hole = new G4SubtractionSolid(
-        al_foil_1_name + "_without_hole",
-        solid_al_foil_1_and_scintillator,
-        solid_scintillator_1
-    );
     G4SubtractionSolid* solid_al_foil_1 = new G4SubtractionSolid(
-        al_foil_1_name,
-        solid_al_foil_1_without_hole,
+        al_foil_1_name_,
+        solid_al_foil_without_hole,
         solid_hole,
         nullptr,
-        G4ThreeVector(0, 0, scintillator_half_size[2] + al_foil_thickness / 2.0)
+        G4ThreeVector(0, 0, scintillator_half_size_[2] + al_foil_scintillator_gap_ + 0.5 * al_foil_thickness_)
     );
-    G4LogicalVolume* logic_al_foil_1 = new G4LogicalVolume(
+    G4LogicalVolume* logical_al_foil_1 = new G4LogicalVolume(
         solid_al_foil_1,
         al_foil_material,
-        al_foil_1_name
+        al_foil_1_name_
     );
     G4VPhysicalVolume* physical_al_foil_1 = new G4PVPlacement(
         0,
         scintillator_1_position,
-        logic_al_foil_1,
-        al_foil_1_name,
+        logical_al_foil_1,
+        al_foil_1_name_,
         logical_world,
         false,
         0,
@@ -222,54 +215,74 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // aluminum foil 2 construction
     //
-    G4Box* solid_al_foil_2_and_scintillator = new G4Box(
-        al_foil_2_name + scintillator_2_name,
-        scintillator_half_size[0] + al_foil_thickness,
-        scintillator_half_size[1] + al_foil_thickness,
-        scintillator_half_size[2] + al_foil_thickness
-    );
-    G4SubtractionSolid* solid_al_foil_2_without_hole = new G4SubtractionSolid(
-        al_foil_2_name + "_without_hole",
-        solid_al_foil_2_and_scintillator,
-        solid_scintillator_2
-    );
     G4SubtractionSolid* solid_al_foil_2 = new G4SubtractionSolid(
-        al_foil_2_name,
-        solid_al_foil_2_without_hole,
+        al_foil_2_name_,
+        solid_al_foil_without_hole,
         solid_hole,
         nullptr,
-        G4ThreeVector(0, 0, -scintillator_half_size[2] - al_foil_thickness / 2.0)
+        G4ThreeVector(0, 0, -scintillator_half_size_[2] - al_foil_scintillator_gap_ - 0.5 * al_foil_thickness_)
     );
-    G4LogicalVolume* logic_al_foil_2 = new G4LogicalVolume(
+    G4LogicalVolume* logical_al_foil_2 = new G4LogicalVolume(
         solid_al_foil_2,
         al_foil_material,
-        al_foil_2_name
+        al_foil_2_name_
     );
     G4VPhysicalVolume* physical_al_foil_2 = new G4PVPlacement(
         0,
         scintillator_2_position,
-        logic_al_foil_2,
-        al_foil_2_name,
+        logical_al_foil_2,
+        al_foil_2_name_,
         logical_world,
         false,
         0,
         enable_check_overlaps
     );
 
+#if SB_ENABLE_OPTICAL_PHYSICS
+    // aluminum foil 1/2 surface construction
+    //
+    G4LogicalSkinSurface* logical_al_foil_1_surface = new G4LogicalSkinSurface(
+        al_foil_1_name_ + "_surface",
+        logical_al_foil_1,
+        al_foil_optical_surface
+    );
+    G4LogicalSkinSurface* logical_al_foil_2_surface = new G4LogicalSkinSurface(
+        al_foil_2_name_ + "_surface",
+        logical_al_foil_2,
+        al_foil_optical_surface
+    );
+#endif
+#pragma endregion
+
     return physical_world;
 }
 
-void sbDetectorConstruction::ConstructScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
+void sbDetectorConstruction::SetScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
     const G4String& sensitive_detector_name) {
     sbTrackerSD* aTrackerSD = new sbTrackerSD(sensitive_detector_name, "TrackerHitsCollection");
     G4SDManager::GetSDMpointer()->AddNewDetector(aTrackerSD);
     SetSensitiveDetector(scintillator_name, aTrackerSD, true);
 }
 
-void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillator_material, G4OpticalSurface*&) {
-    // the mathematical functions of the optical properties of the scintillator
-    // absorption
-    G4double scintillator_absorbtion_energy[502] =
+#if SB_ENABLE_OPTICAL_PHYSICS
+
+void sbDetectorConstruction::SetWorldOpticalProperties(G4Material*& world_material) const {
+    G4MaterialPropertiesTable* world_properties_table = new G4MaterialPropertiesTable();
+
+    // Refraction index
+    G4double world_refraction_photon_energy[2] = { 1.0, 1.0 };
+    G4double world_refraction_index[2] = { 1.0 * eV, 16.0 * eV };
+    world_properties_table->AddProperty("RINDEX", world_refraction_index, world_refraction_photon_energy, 2);
+
+    // Set!
+    world_material->SetMaterialPropertiesTable(world_properties_table);
+}
+
+void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material*& scintillator_material) const {
+    G4MaterialPropertiesTable* scintillator_properties_table = new G4MaterialPropertiesTable();
+
+    // Absorption length
+    G4double scintillator_absorbtion_photon_energy[502] =
     { 1.3778 * eV, 1.3793 * eV, 1.3808 * eV, 1.3824 * eV, 1.3839 * eV, 1.3855 * eV,
         1.3870 * eV, 1.3886 * eV, 1.3901 * eV, 1.3917 * eV, 1.3933 * eV, 1.3948 * eV, 1.3964 * eV, 1.3980 * eV,
         1.3995 * eV, 1.4011 * eV, 1.4027 * eV, 1.4043 * eV, 1.4059 * eV, 1.4075 * eV, 1.4091 * eV, 1.4107 * eV,
@@ -398,15 +411,16 @@ void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillat
         0.00132 * m,  0.00126 * m,  0.00121 * m,  0.00115 * m,  0.00108 * m,  0.00102 * m,  0.00095 * m,  0.00088 * m,
         0.00077 * m,  0.00070 * m,  0.00062 * m,  0.00055 * m,  0.00048 * m,  0.000001 * m, 0.000001 * m, 0.000001 * m };
 
-    // refraction
-    G4double scintRefractionIndexEnergy[18] =
+    // Refraction index
+    G4double scintillator_refraction_photon_energy[18] =
     { 1.55 * eV, 1.79505 * eV, 2.10499 * eV, 2.27077 * eV, 2.55111 * eV, 2.84498 * eV, 3.06361 * eV, 4.13281 * eV,
         6.20 * eV, 6.526 * eV, 6.889 * eV, 7.294 * eV, 7.75 * eV, 8.267 * eV, 8.857 * eV, 9.538 * eV, 10.33 * eV,
         15.5 * eV };
-    G4double scintRefractionIndex[18] = { 1.4781, 1.48, 1.4842, 1.4861, 1.4915, 1.4955, 1.4988, 1.5264, 1.6185, 1.6176,
-        1.5270, 1.5545, 1.793, 1.7826, 1.6642, 1.5545, 1.4536, 1.4536 };
+    G4double scintillator_refraction_index[18] =
+    { 1.4781, 1.48, 1.4842, 1.4861, 1.4915, 1.4955, 1.4988, 1.5264, 1.6185, 1.6176, 1.5270, 1.5545, 1.793,
+        1.7826, 1.6642, 1.5545, 1.4536, 1.4536 };
 
-    // reemittion
+    // Reemission probablity
     G4double scintReemEnergy[28] =
     { 1.55000 * eV, 1.73987 * eV, 2.15315 * eV, 2.42867 * eV, 2.45963 * eV, 2.49129 * eV, 2.52368 * eV, 2.55682 * eV,
         2.59075 * eV, 2.62547 * eV, 2.66104 * eV, 2.69747 * eV, 2.73481 * eV, 2.77308 * eV, 2.81231 * eV, 2.85255 * eV,
@@ -416,12 +430,13 @@ void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillat
     { 0, 0, 0.0587, 0.1141, 0.1259, 0.1215, 0.116, 0.1372, 0.1344, 0.1409, 0.1417, 0.1712, 0.1936, 0.1969, 0.2203,
         0.2354, 0.3004, 0.4165, 0.6353, 0.8022, 0.8004, 0.8006, 0.8, 0.45, 0.42, 0.40, 0.40, 0.40 };
 
-    // raylay scattering
+    // Rayleigh scattering
     G4double scintRayEnergy[11] =
     { 1.55 * eV, 1.7714 * eV, 2.102 * eV, 2.255 * eV, 2.531 * eV, 2.884 * eV, 3.024 * eV, 4.133 * eV, 6.20 * eV,
         10.33 * eV, 15.5 * eV };
     G4double scintRayLength[11] =
-    { 500.0 * m, 300.0 * m, 170.0 * m, 100.0 * m, 62.0 * m, 42.0 * m, 30.0 * m, 7.6 * m, 0.85 * m, 0.85 * m, 0.85 * m };
+    { 500.0 * m, 300.0 * m, 170.0 * m, 100.0 * m, 62.0 * m, 42.0 * m, 30.0 * m, 7.6 * m, 0.85 * m,
+        0.85 * m, 0.85 * m };
     G4double scintComEnergy[275] =
     { 1.550000 * eV, 2.066401 * eV, 2.069851 * eV, 2.073312 * eV, 2.076791 * eV, 2.080272 * eV, 2.083771 * eV,
         2.087279 * eV, 2.090801 * eV, 2.094329 * eV, 2.097869 * eV, 2.101431 * eV, 2.104992 * eV, 2.108571 * eV,
@@ -464,7 +479,7 @@ void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillat
         3.701017 * eV, 3.712097 * eV, 3.723254 * eV, 3.734456 * eV, 3.745748 * eV, 3.757098 * eV, 6.200000 * eV,
         10.33 * eV, 15.5 * eV };
 
-    // fast light component of the scintillator
+    // Fast/Slow light component
     G4double scintFastComponent[275] =
     { 0.000000, 0.007298, 0.007011, 0.007932, 0.008065, 0.007699, 0.006620, 0.007727, 0.007464, 0.007931, 0.006825,
         0.007623, 0.006487, 0.007494, 0.007604, 0.007250, 0.007187, 0.008465, 0.007539, 0.007951, 0.007393, 0.008746,
@@ -492,54 +507,71 @@ void sbDetectorConstruction::ConstructScintillatorOptics(G4Material*& scintillat
         0.002367, 0.002698, 0.002239, 0.002125, 0.002578, 0.002259, 0.002102, 0.002050, 0.002311, 0.001994, 0.001809,
         0.001690, 0.001965, 0.001909, 0.002218, 0.001887, 0.001981, 0.002153, 0.002269, 0.000000, 0.000000, 0.000000 };
 
-    auto MPTscint = new G4MaterialPropertiesTable();
+    // Absorption length
+    scintillator_properties_table->
+        AddProperty("ABSLENGTH", scintillator_absorbtion_photon_energy, scintillator_absorbtion_length, 502);
+    // Refraction index
+    scintillator_properties_table->
+        AddProperty("RINDEX", scintillator_refraction_photon_energy, scintillator_refraction_index, 18);
+    // Reemission probablity
+    scintillator_properties_table->AddProperty("REEMISSIONPROB", scintReemEnergy, scintReem, 28);
+    // Rayleigh scattering
+    scintillator_properties_table->AddProperty("RAYLEIGH", scintRayEnergy, scintRayLength, 11);
+    // Fast light component
+    scintillator_properties_table->AddProperty("FASTCOMPONENT", scintComEnergy, scintFastComponent, 275);
+    // Slow light component
+    scintillator_properties_table->AddProperty("SLOWCOMPONENT", scintComEnergy, scintFastComponent, 275);
+    // Scintillation yield
+    scintillator_properties_table->AddConstProperty("SCINTILLATIONYIELD", 11522 / MeV);
+    // Resolution scale
+    scintillator_properties_table->AddConstProperty("RESOLUTIONSCALE", 1.0);
+    // Fast time constant
+    scintillator_properties_table->AddConstProperty("FASTTIMECONSTANT", 2.1 * ns);
+    // Slow time constant
+    scintillator_properties_table->AddConstProperty("SLOWTIMECONSTANT", 14.2 * ns);
+    // Yield ratio
+    scintillator_properties_table->AddConstProperty("YIELDRATIO", 0.799);
+    // Alpha fast time constant
+    scintillator_properties_table->AddConstProperty("AlphaFASTTIMECONSTANT", 1.0 * ns);
+    // Alpha Slow time constant
+    scintillator_properties_table->AddConstProperty("AlphaSLOWTIMECONSTANT", 35.0 * ns);
+    // Alpha yield ratio
+    scintillator_properties_table->AddConstProperty("AlphaYIELDRATIO", 0.65);
+    // Neutron fast time constant
+    scintillator_properties_table->AddConstProperty("NeutronFASTTIMECONSTANT", 1.0 * ns);
+    // Neutron Slow time constant
+    scintillator_properties_table->AddConstProperty("NeutronSLOWTIMECONSTANT", 34.0 * ns);
+    // Neutron yield ratio
+    scintillator_properties_table->AddConstProperty("NeutronYIELDRATIO", 0.65);
+    // Reemission fast time constant
+    scintillator_properties_table->AddConstProperty("ReemissionFASTTIMECONSTANT", 1.50 * ns);
+    // Reemission Slow time constant
+    scintillator_properties_table->AddConstProperty("ReemissionSLOWTIMECONSTANT", 1.50 * ns);
+    // Reemission yield ratio
+    scintillator_properties_table->AddConstProperty("ReemissionYIELDRATIO", 1.000);
 
-    MPTscint->AddProperty("RINDEX", scintRefractionIndexEnergy, scintRefractionIndex, 18);
-    MPTscint->AddProperty("ABSLENGTH", scintillator_absorbtion_energy, scintillator_absorbtion_length, 502);
-    MPTscint->AddProperty("RAYLEIGH", scintRayEnergy, scintRayLength, 11);
+    // Set!
+    scintillator_material->SetMaterialPropertiesTable(scintillator_properties_table);
 
-
-    MPTscint->AddProperty("FASTCOMPONENT", scintComEnergy, scintFastComponent, 275);
-    MPTscint->AddProperty("SLOWCOMPONENT", scintComEnergy, scintFastComponent, 275);
-    MPTscint->AddProperty("REEMISSIONPROB", scintReemEnergy, scintReem, 28);
-
-
-    MPTscint->AddConstProperty("SCINTILLATIONYIELD", 11522 / MeV);
-    MPTscint->AddConstProperty("RESOLUTIONSCALE", 1.0);
-    MPTscint->AddConstProperty("FASTTIMECONSTANT", 2.1 * ns);
-    MPTscint->AddConstProperty("SLOWTIMECONSTANT", 14.2 * ns);
-    MPTscint->AddConstProperty("YIELDRATIO", 0.799);
-
-    MPTscint->AddConstProperty("AlphaFASTTIMECONSTANT", 1.0 * ns);
-    MPTscint->AddConstProperty("AlphaSLOWTIMECONSTANT", 35.0 * ns);
-    MPTscint->AddConstProperty("AlphaYIELDRATIO", 0.65);
-
-    MPTscint->AddConstProperty("NeutronFASTTIMECONSTANT", 1.0 * ns);
-    MPTscint->AddConstProperty("NeutronSLOWTIMECONSTANT", 34.0 * ns);
-    MPTscint->AddConstProperty("NeutronYIELDRATIO", 0.65);
-
-    MPTscint->AddConstProperty("ReemissionFASTTIMECONSTANT", 1.50 * ns);
-    MPTscint->AddConstProperty("ReemissionSLOWTIMECONSTANT", 1.50 * ns);
-    MPTscint->AddConstProperty("ReemissionYIELDRATIO", 1.000);
-
-    scintillator_material->SetMaterialPropertiesTable(MPTscint);
-
+    // Birks constant
     scintillator_material->GetIonisation()->SetBirksConstant(0.15 * mm / MeV);
-
 }
 
-void sbDetectorConstruction::ConstructAlFoilOptics(G4Material*&, G4OpticalSurface*& surface) {
-    //reflection: photon energy vs. reflectivity
-    G4double FoilReflectEneg[6] = { 2. * eV, 3. * eV, 4. * eV, 5. * eV, 6. * eV, 7. * eV };
-#if ENABLE_SURFACE_REFLECTION
-    G4double FoilReflectivity[6] = { 0.9, 0.9, 0.9, 0.9, 0.9, 0.9 };
+void sbDetectorConstruction::SetAlFoilOpticalProperties(G4OpticalSurface*& al_foil_optical_surface) const {
+    G4MaterialPropertiesTable* al_foli_properties_table = new G4MaterialPropertiesTable();
+
+    // Reflectivity
+    G4double al_foil_reflection_photon_energy[6] = { 2. * eV, 3. * eV, 4. * eV, 5. * eV, 6. * eV, 7. * eV };
+#if SB_ENABLE_AL_FOIL_REFLECTION
+    G4double al_foil_reflectivity[6] = { 0.9, 0.9, 0.9, 0.9, 0.9, 0.9 };
 #else
-    G4double FoilReflectivity[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    G4double al_foil_reflectivity[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 #endif
+    al_foli_properties_table->AddProperty("REFLECTIVITY", al_foil_reflection_photon_energy, al_foil_reflectivity, 6);
 
-    auto FoilTable = new G4MaterialPropertiesTable();
-    FoilTable->AddProperty("REFLECTIVITY", FoilReflectEneg, FoilReflectivity, 6);
-
-    surface->SetMaterialPropertiesTable(FoilTable);
+    // Set!
+    al_foil_optical_surface->SetMaterialPropertiesTable(al_foli_properties_table);
 }
+
+#endif
 
