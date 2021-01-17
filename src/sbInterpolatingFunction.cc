@@ -1,41 +1,40 @@
 #include "sbInterpolatingFunction.hh"
 
-sbInterpolatingFunction::sbInterpolatingFunction(const char file_name[], const size_t& size) :
-    data_(size) {
-    if (size < 2) {
+InterpolatingFunction::InterpolatingFunction(const vector<G4double>& x, const vector<G4double>& y) :
+    data_(x, y) {
+    if (data_.IsEmpty()) {
         G4ExceptionDescription error_message;
-        error_message << "Interpolating points number is less than 2." << G4endl;
-        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "Invalid data",
-            FatalException, error_message);
-    }
-    std::ifstream fin(file_name);
-    if (fin.is_open()) {
-        for (auto xy_pair = data_.begin(); xy_pair != data_.end(); ++xy_pair) {
-            fin >> xy_pair->first;
-            fin.get();
-            fin >> xy_pair->second;
-            fin.get();
-        }
-        fin.close();
-        std::sort(data_.begin(), data_.end());
-    } else {
+        error_message << "Data points do not exist." << G4endl;
+        error_message << "The interpolating function will not properly functioned." << G4endl;
+        G4Exception(
+            "InterpolatingFunction::InterpolatingFunction(const vector<G4double>& x, const vector<G4double>& y)",
+            "Invalid data", JustWarning, error_message);
+    } else if (data_.Size() < 2) {
         G4ExceptionDescription error_message;
-        error_message << "Data file:" << G4endl;
-        error_message << file_name << G4endl;
-        error_message << "not found." << G4endl;
-        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "Data file not found",
-            FatalException, error_message);
+        error_message << "There is only one data point." << G4endl;
+        error_message << "The interpolating function will not properly functioned." << G4endl;
+        G4Exception(
+            "InterpolatingFunction::InterpolatingFunction(const vector<G4double>& x, const vector<G4double>& y)",
+            "Invalid data", JustWarning, error_message);
     }
 }
 
-sbInterpolatingFunction::sbInterpolatingFunction(const vector<XYpair>& data) :
-    data_(data) {
-    if (data_.size() < 2) {
+InterpolatingFunction::InterpolatingFunction(const char csv_file_name[], const size_t& data_size) :
+    data_(csv_file_name, data_size) {
+    if (data_.IsEmpty()) {
         G4ExceptionDescription error_message;
-        error_message << "Interpolating points number is less than 2.\n";
-        G4Exception("sbInterpolatingFunction::sbInterpolatingFunction()", "Invalid data",
-            FatalException, error_message);
+        error_message << "Data points do not exist." << G4endl;
+        error_message << "The interpolating function will not properly functioned." << G4endl;
+        G4Exception(
+            "InterpolatingFunction::InterpolatingFunction(const char csv_file_name[], const size_t& data_size)",
+            "Invalid data", JustWarning, error_message);
+    } else if (data_size < 2) {
+        G4ExceptionDescription error_message;
+        error_message << "There is only one data point." << G4endl;
+        error_message << "The interpolating function will not properly functioned." << G4endl;
+        G4Exception(
+            "InterpolatingFunction::InterpolatingFunction(const char csv_file_name[], const size_t& data_size)",
+            "Invalid data", JustWarning, error_message);
     }
-    std::sort(data_.begin(), data_.end());
 }
 

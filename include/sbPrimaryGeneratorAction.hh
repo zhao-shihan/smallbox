@@ -26,8 +26,8 @@ class G4Sphere;
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
     G4ParticleGun* particle_gun_;
-    sbInterpolatingFunction* cosmic_muon_zenith_angle_distribution_;
-    sbInterpolatingFunction* cosmic_muon_energy_spectrum_;
+    InterpolatingFunction* cosmic_muon_zenith_angle_distribution_;
+    InterpolatingFunction* cosmic_muon_energy_spectrum_;
 
 public:
     sbPrimaryGeneratorAction();

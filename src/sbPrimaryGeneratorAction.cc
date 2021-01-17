@@ -4,9 +4,9 @@ sbPrimaryGeneratorAction::sbPrimaryGeneratorAction() :
     G4VUserPrimaryGeneratorAction(),
     particle_gun_(new G4ParticleGun(1)),
     cosmic_muon_zenith_angle_distribution_(
-        new sbInterpolatingFunction("cosmic_muon_zenith_angle_distribution_CDF_inverse.csv", 100)),
+        new InterpolatingFunction("cosmic_muon_zenith_angle_distribution_CDF_inverse.csv", 100)),
     cosmic_muon_energy_spectrum_(
-        new sbInterpolatingFunction("cosmic_muon_energy_spectrum_CDF_inverse.csv", 1000)) {}
+        new InterpolatingFunction("cosmic_muon_energy_spectrum_CDF_inverse.csv", 1000)) {}
 
 sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
     delete particle_gun_;
