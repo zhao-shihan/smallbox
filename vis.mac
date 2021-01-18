@@ -2,7 +2,7 @@
 # of the test when running in interactive mode
 #
 /vis/open OGL 600x600-0+0
-/vis/ogl/set/displayListLimit 100000
+/vis/ogl/set/displayListLimit 10000000
 
 /vis/viewer/set/autoRefresh false
 /vis/verbose errors
@@ -25,7 +25,7 @@
 
 /vis/scene/endOfEventAction accumulate -1
 
-#/vis/geometry/set/visibility world 0 false
+/vis/geometry/set/visibility world 0 false
 
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings

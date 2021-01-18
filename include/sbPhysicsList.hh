@@ -21,7 +21,7 @@
 #include "G4SystemOfUnits.hh"
 #include "globals.hh"
 
-#include "sbSwitch.hh"
+#include "sbSettings.hh"
 
 class G4OpticalPhysics;
 class G4DecayPhysics;

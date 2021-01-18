@@ -19,8 +19,14 @@ public:
     ~XYlist() {}
     G4bool IsEmpty() const { return xylist_.first.empty(); }
     size_t Size() const { return xylist_.first.size(); }
-    const vector<G4double>& x() const { return xylist_.first; }
-    const vector<G4double>& y() const { return xylist_.second; }
+    vector<G4double>& x() { return xylist_.first; }
+    vector<G4double>& y() { return xylist_.second; }
+    const vector<G4double>& cx() const { return xylist_.first; }
+    const vector<G4double>& cy() const { return xylist_.second; }
+    G4double* px() { return &*(xylist_.first.begin()); }
+    G4double* py() { return &*(xylist_.second.begin()); }
+    const G4double* cpx() const { return &*(xylist_.first.begin()); }
+    const G4double* cpy() const { return &*(xylist_.second.begin()); }
     void SwapXY() { xylist_.first.swap(xylist_.second); }
     void SetXY(const vector<G4double> x, const vector<G4double> y);
     void SetX(const vector<G4double> x);

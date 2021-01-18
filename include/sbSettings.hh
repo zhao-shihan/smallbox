@@ -9,7 +9,7 @@
 
 #if SB_ENABLE_OPTICAL_PHYSICS
 // Enable total reflection on scintillator's surface.
-#define SB_ENABLE_SCINTILLATOR_REFLECTION        1
+// ToDO #define SB_ENABLE_SCINTILLATOR_REFLECTION        1
 
 // Enable reflection on aluminum foil's surface.
 #define SB_ENABLE_AL_FOIL_REFLECTION             1

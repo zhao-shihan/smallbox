@@ -45,6 +45,11 @@ set(SCRIPTS
   vis.mac
   cosmic_muon_energy_spectrum_CDF_inverse.csv
   cosmic_muon_zenith_angle_distribution_CDF_inverse.csv
+  scintillator_absorbtion_length.csv
+  scintillator_fast_light_component.csv
+  scintillator_rayleigh_scattering_length.csv
+  scintillator_reemission_probablity.csv
+  scintillator_refraction_index.csv
   )
 
 foreach(_script ${SCRIPTS})

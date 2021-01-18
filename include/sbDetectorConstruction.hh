@@ -21,7 +21,8 @@
 #include "G4SDManager.hh"
 
 #include "sbTrackerSD.hh"
-#include "sbSwitch.hh"
+#include "sbSettings.hh"
+#include "sbXYlist.hh"
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
