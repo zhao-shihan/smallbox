@@ -15,7 +15,7 @@ private:
 
 public:
     XYlist(const vector<G4double>& x, const vector<G4double>& y);
-    XYlist(const char csv_file_name[], const size_t& data_size);
+    XYlist(const G4String& csv_file_name, const size_t& data_size);
     ~XYlist() {}
     G4bool IsEmpty() const { return xylist_.first.empty(); }
     size_t Size() const { return xylist_.first.size(); }
@@ -28,9 +28,13 @@ public:
     const G4double* cpx() const { return &*(xylist_.first.begin()); }
     const G4double* cpy() const { return &*(xylist_.second.begin()); }
     void SwapXY() { xylist_.first.swap(xylist_.second); }
-    void SetXY(const vector<G4double> x, const vector<G4double> y);
-    void SetX(const vector<G4double> x);
-    void SetY(const vector<G4double> y);
+    void SetXY(const vector<G4double>& x, const vector<G4double>& y);
+    void SetX(const vector<G4double>& x);
+    void SetY(const vector<G4double>& y);
+
+private:
+    void ThrowDataFileNotFound(const G4String& error_messages, const G4String& function_name) const;
+    void ThrowLengthMismatches(const G4String& error_messages, const G4String& function_name) const;
 };
 
 #endif

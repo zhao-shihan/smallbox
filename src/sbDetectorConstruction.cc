@@ -281,6 +281,7 @@ void sbDetectorConstruction::SetWorldOpticalProperties(G4Material*& world_materi
 void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material*& scintillator_material) const {
     G4MaterialPropertiesTable* scintillator_properties_table = new G4MaterialPropertiesTable();
 
+#if !SB_SUPPRESS_SCINTILLATION_PROPAGATION
     // Absorption length
     XYlist absorption_length("scintillator_absorbtion_length.csv", 502);
     scintillator_properties_table->AddProperty(
@@ -289,6 +290,17 @@ void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material*& scint
         absorption_length.py(),
         absorption_length.Size()
     );
+#else
+    // Surppress light propagation
+    G4double absorption_length_photon_energy[2] = { 1.0 * eV, 20.0 * eV };
+    G4double absorption_length[2] = { 0.0, 0.0 };
+    scintillator_properties_table->AddProperty(
+        "ABSLENGTH",
+        absorption_length_photon_energy,
+        absorption_length,
+        2
+    );
+#endif
     // Refraction index
     XYlist refraction_index("scintillator_refraction_index.csv", 18);
     scintillator_properties_table->AddProperty(
