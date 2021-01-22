@@ -272,7 +272,12 @@ void sbDetectorConstruction::SetWorldOpticalProperties(G4Material*& world_materi
     // Refraction index
     G4double refraction_photon_energy[2] = { 1.0 * eV, 20.0 * eV };
     G4double refraction_index[2] = { 1.0, 1.0 };
-    world_properties_table->AddProperty("RINDEX", refraction_photon_energy, refraction_index, 2);
+    world_properties_table->AddProperty(
+        "RINDEX",
+        refraction_photon_energy,
+        refraction_index,
+        2
+    );
 
     // Set!
     world_material->SetMaterialPropertiesTable(world_properties_table);
@@ -301,6 +306,7 @@ void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material*& scint
         2
     );
 #endif
+#if SB_ENABLE_SCINTILLATOR_REF
     // Refraction index
     XYlist refraction_index("scintillator_refraction_index.csv", 18);
     scintillator_properties_table->AddProperty(
@@ -309,6 +315,17 @@ void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material*& scint
         refraction_index.py(),
         refraction_index.Size()
     );
+#else
+    // Disable refraction & reflection
+    G4double refraction_photon_energy[2] = { 1.0 * eV, 20.0 * eV };
+    G4double refraction_index[2] = { 1.0, 1.0 };
+    scintillator_properties_table->AddProperty(
+        "RINDEX",
+        refraction_photon_energy,
+        refraction_index,
+        2
+    );
+#endif
     // Reemission probablity
     XYlist reemission_probablity("scintillator_reemission_probablity.csv", 28);
     scintillator_properties_table->AddProperty(
@@ -386,7 +403,12 @@ void sbDetectorConstruction::SetAlFoilOpticalProperties(G4OpticalSurface*& al_fo
 #else
     G4double reflectivity[2] = { 0.0, 0.0 };
 #endif
-    al_foil_properties_table->AddProperty("REFLECTIVITY", reflection_photon_energy, reflectivity, 2);
+    al_foil_properties_table->AddProperty(
+        "REFLECTIVITY",
+        reflection_photon_energy,
+        reflectivity,
+        2
+    );
 
     // Set!
     al_foil_optical_surface->SetMaterialPropertiesTable(al_foil_properties_table);

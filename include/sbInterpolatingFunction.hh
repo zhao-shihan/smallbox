@@ -2,14 +2,13 @@
 #define SB_INTERPOLATING_FUNCTION_H 1
 
 #include "sbXYlist.hh"
-
 class InterpolatingFunction {
 private:
     XYlist data_;
 
 public:
     InterpolatingFunction(const vector<G4double>& x, const vector<G4double>& y);
-    InterpolatingFunction(const char csv_file_name[], const size_t& data_size);
+    InterpolatingFunction(const G4String& csv_file_name, const size_t& data_size);
     ~InterpolatingFunction() {}
 
     inline G4double operator()(const G4double& x) const;

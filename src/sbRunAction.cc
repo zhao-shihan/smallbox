@@ -17,7 +17,7 @@ RunAction::~RunAction() {}
 void RunAction::BeginOfRunAction(const G4Run*) {}
 
 void RunAction::EndOfRunAction(const G4Run* run) {
-    G4int nofEvents = run->GetNumberOfEvent();
+    /* G4int nofEvents = run->GetNumberOfEvent();
     if (nofEvents == 0) {
         return;
     }
@@ -27,6 +27,6 @@ void RunAction::EndOfRunAction(const G4Run* run) {
         << " The run consists of " << nofEvents << " events"
         << G4endl
         << "------------------------------------------------------------"
-        << G4endl;
+        << G4endl; */
 }
 

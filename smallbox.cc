@@ -40,8 +40,7 @@ int main(int argc, char** argv) {
     runManager->SetUserInitialization(sbDetectorConstruction::GetInstance());
 
     // Physics list
-    G4VModularPhysicsList* physicsList = new sbPhysicsList();
-    runManager->SetUserInitialization(physicsList);
+    runManager->SetUserInitialization(new sbPhysicsList());
 
     // User action initialization
     runManager->SetUserInitialization(new ActionInitialization());

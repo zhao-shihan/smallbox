@@ -19,7 +19,7 @@ InterpolatingFunction::InterpolatingFunction(const vector<G4double>& x, const ve
     }
 }
 
-InterpolatingFunction::InterpolatingFunction(const char csv_file_name[], const size_t& data_size) :
+InterpolatingFunction::InterpolatingFunction(const G4String& csv_file_name, const size_t& data_size) :
     data_(csv_file_name, data_size) {
     if (data_.IsEmpty()) {
         G4ExceptionDescription error_message;

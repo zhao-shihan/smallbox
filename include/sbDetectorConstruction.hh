@@ -30,11 +30,11 @@ class G4LogicalVolume;
 class sbDetectorConstruction : public G4VUserDetectorConstruction {
 public:
     static sbDetectorConstruction* GetInstance() {
-        if (instance_ == nullptr) { instance_ = new sbDetectorConstruction(); }
+        if (!instance_) { instance_ = new sbDetectorConstruction(); }
         return instance_;
     }
     sbDetectorConstruction(const sbDetectorConstruction&) = delete;
-    sbDetectorConstruction operator=(const sbDetectorConstruction&) = delete;
+    sbDetectorConstruction& operator=(const sbDetectorConstruction&) = delete;
 private:
     static sbDetectorConstruction* instance_;
     sbDetectorConstruction();
