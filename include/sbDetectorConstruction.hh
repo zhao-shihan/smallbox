@@ -20,9 +20,8 @@
 #include "G4OpticalSurface.hh"
 #include "G4SDManager.hh"
 
-#include "sbTrackerSD.hh"
-#include "sbSettings.hh"
-#include "sbXYlist.hh"
+#include "sbConfigs.hh"
+#include "CreateMapFromCSV.hh"
 
 class G4VPhysicalVolume;
 class G4LogicalVolume;
@@ -41,7 +40,6 @@ private:
     virtual ~sbDetectorConstruction() {}
 
 private:
-    G4NistManager* nist;
     //
     // world's size, name, and materials
 
@@ -71,12 +69,12 @@ public:
     virtual G4VPhysicalVolume* Construct();
     G4double get_world_radius() const { return world_radius_; }
 private:
-    void SetScintillatorsAsSensitiveDetector(const G4String& scintillator_name,
-        const G4String& sensitive_detector_name);
+    // void ConstructSDandField(G4LogicalVolume* logical_scintillator,
+    //     const G4String& sensitive_detector_name);
     //
     // World material optical properties setting.
     // -> Refraction index
-    void SetWorldOpticalProperties(G4Material*& world_material) const;
+    void SetWorldOpticalProperties(G4Material* world_material) const;
     //
     // Scintillator material optical properties setting.
     // -> Absorption length
@@ -98,11 +96,11 @@ private:
     // -> Reemission fast time constant
     // -> Reemission Slow time constant
     // -> Reemission yield ratio
-    void SetScintillatorOpticalProperties(G4Material*& scintillator_material) const;
+    void SetScintillatorOpticalProperties(G4Material* scintillator_material) const;
     // 
     // Aluminum foil surface optical properties setting.
     // -> Reflectivity
-    void SetAlFoilOpticalProperties(G4OpticalSurface*& al_foil_optical_surface) const;
+    void SetAlFoilOpticalProperties(G4OpticalSurface* al_foil_optical_surface) const;
 };
 
 #endif

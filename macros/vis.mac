@@ -27,7 +27,7 @@
 
 /vis/scene/endOfEventAction accumulate -1
 
-/vis/geometry/set/visibility world 0 false
+#/vis/geometry/set/visibility world 0 false
 
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings

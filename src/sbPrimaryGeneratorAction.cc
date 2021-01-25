@@ -3,8 +3,19 @@
 sbPrimaryGeneratorAction::sbPrimaryGeneratorAction() :
     G4VUserPrimaryGeneratorAction(),
     particle_gun_(new G4ParticleGun(1)),
-    cosmic_muon_zenith_angle_distribution_("cosmic_muon_zenith_angle_distribution_CDF_inverse.csv", 100),
-    cosmic_muon_energy_spectrum_("cosmic_muon_energy_spectrum_CDF_inverse.csv", 1000) {}
+    cosmic_muon_properties_(
+        CreateMapFromCSV<G4double>("./datafiles/cosmicMuonProperties.csv")
+    ),
+    cosmic_muon_zenith_angle_distribution_CDF_(
+        &cosmic_muon_properties_["thetaDistribution"][0],
+        &cosmic_muon_properties_["theta"][0],
+        cosmic_muon_properties_["theta"].size()
+    ),
+    cosmic_muon_energy_spectrum_CDF_(
+        &cosmic_muon_properties_["energySpectrum"][0],
+        &cosmic_muon_properties_["energy"][0],
+        cosmic_muon_properties_["energy"].size()
+    ) {}
 
 sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
     delete particle_gun_;
@@ -35,12 +46,12 @@ inline G4ThreeVector sbPrimaryGeneratorAction::RandomUpperHalfSpherePosition() c
 
 inline G4ThreeVector sbPrimaryGeneratorAction::CosmicMuonMomentumDirection() const {
     G4double phi = _2_pi * G4UniformRand();
-    G4double theta = cosmic_muon_zenith_angle_distribution_(G4UniformRand());
+    G4double theta = cosmic_muon_zenith_angle_distribution_CDF_.Value(G4UniformRand());
     G4double sin_theta = sin(theta);
     return G4ThreeVector(sin_theta * cos(phi), sin_theta * sin(phi), -cos(theta));
 }
 
 inline G4double sbPrimaryGeneratorAction::CosmicMuonEnergySpectrum() const {
-    return cosmic_muon_energy_spectrum_(G4UniformRand()) * GeV;
+    return cosmic_muon_energy_spectrum_CDF_.Value(G4UniformRand()) * GeV;
 }
 

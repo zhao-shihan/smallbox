@@ -16,7 +16,7 @@
 #include "Randomize.hh"
 
 #include "sbDetectorConstruction.hh"
-#include "sbInterpolatingFunction.hh"
+#include "CreateMapFromCSV.hh"
 
 class sbDetectorConstruction;
 class G4ParticleGun;
@@ -26,8 +26,9 @@ class G4Sphere;
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
     G4ParticleGun* particle_gun_;
-    InterpolatingFunction cosmic_muon_zenith_angle_distribution_;
-    InterpolatingFunction cosmic_muon_energy_spectrum_;
+    std::map<std::string, G4PVDataVector> cosmic_muon_properties_;
+    G4PhysicsOrderedFreeVector cosmic_muon_zenith_angle_distribution_CDF_;
+    G4PhysicsOrderedFreeVector cosmic_muon_energy_spectrum_CDF_;
 
 public:
     sbPrimaryGeneratorAction();

@@ -36,20 +36,15 @@ target_link_libraries(smallbox ${Geant4_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
-# build B1. This is so that we can run the executable directly because it
+# build smallbox. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
 set(SCRIPTS
-  init_vis.mac
-  run.mac
-  vis.mac
-  cosmic_muon_energy_spectrum_CDF_inverse.csv
-  cosmic_muon_zenith_angle_distribution_CDF_inverse.csv
-  scintillator_absorbtion_length.csv
-  scintillator_fast_light_component.csv
-  scintillator_rayleigh_scattering_length.csv
-  scintillator_reemission_probablity.csv
-  scintillator_refraction_index.csv
+  ./macros/init_vis.mac
+  ./macros/run.mac
+  ./macros/vis.mac
+  ./datafiles/cosmicMuonProperties.csv
+  ./datafiles/scintillatorProperties.csv
   )
 
 foreach(_script ${SCRIPTS})

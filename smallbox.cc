@@ -18,7 +18,7 @@
 int main(int argc, char** argv) {
     // Detect interactive mode (if no arguments) and define UI session
     //
-    G4UIExecutive* ui = 0;
+    G4UIExecutive* ui = nullptr;
     if (argc == 1) {
         ui = new G4UIExecutive(argc, argv);
     }
@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
 
     // Process macro or start UI session
     //
+    UImanager->ApplyCommand("/control/macroPath macros");
     if (!ui) {
         // batch mode
         G4String command = "/control/execute ";
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
         UImanager->ApplyCommand(command + fileName);
     } else {
         // interactive mode
-        UImanager->ApplyCommand("/control/execute init_vis.mac");
+        UImanager->ApplyCommand("/control/execute /init_vis.mac");
         ui->SessionStart();
         delete ui;
     }
