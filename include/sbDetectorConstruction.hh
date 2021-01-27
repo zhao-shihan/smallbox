@@ -29,13 +29,13 @@ class G4LogicalVolume;
 class sbDetectorConstruction : public G4VUserDetectorConstruction {
 public:
     static sbDetectorConstruction* GetInstance() {
-        if (!instance_) { instance_ = new sbDetectorConstruction(); }
-        return instance_;
+        if (!sbDCInstance) { sbDCInstance = new sbDetectorConstruction(); }
+        return sbDCInstance;
     }
     sbDetectorConstruction(const sbDetectorConstruction&) = delete;
     sbDetectorConstruction& operator=(const sbDetectorConstruction&) = delete;
 private:
-    static sbDetectorConstruction* instance_;
+    static sbDetectorConstruction* sbDCInstance;
     sbDetectorConstruction();
     virtual ~sbDetectorConstruction() {}
 
@@ -43,31 +43,31 @@ private:
     //
     // world's size, name, and materials
 
-    G4double world_radius_;
-    G4String world_name_;
-    G4String world_material_name_;
+    G4double fWorldRadius;
+    G4String fWorldName;
+    G4String fWorldMaterialName;
     //
     // scintillators' size, name, and materials
 
-    G4double scintillator_half_size_[3];
-    G4double scintillator_centre_distance_;
-    G4String scintillator_1_name_;
-    G4String scintillator_2_name_;
-    G4String sensitive_detector_name_;
-    G4String scintillator_material_name_;
+    G4double fScintillatorHalfSize[3];
+    G4double fScintillatorDistance;
+    G4String fScintillator1Name;
+    G4String fScintillator2Name;
+    G4String fSensitiveDetectorName;
+    G4String fScintillatorMaterialName;
     //
     // aluminum foils' size, name, and materials
 
-    G4double al_foil_thickness_;
-    G4double al_foil_hole_half_width_;
-    G4double al_foil_scintillator_gap_;
-    G4String al_foil_1_name_;
-    G4String al_foil_2_name_;
-    G4String al_foil_material_name_;
+    G4double fAlFoilThickness;
+    G4double fAlFoilHoleHalfWidth;
+    G4double fAlFoilScintillatorGap;
+    G4String fAlFoil1Name;
+    G4String fAlFoil2Name;
+    G4String fAlFoilMaterialName;
 
 public:
     virtual G4VPhysicalVolume* Construct();
-    G4double get_world_radius() const { return world_radius_; }
+    G4double getWorldRadius() const { return fWorldRadius; }
 private:
     // void ConstructSDandField(G4LogicalVolume* logical_scintillator,
     //     const G4String& sensitive_detector_name);

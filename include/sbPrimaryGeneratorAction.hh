@@ -25,16 +25,17 @@ class G4Sphere;
 
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
-    G4ParticleGun* particle_gun_;
-    std::map<std::string, G4PVDataVector> cosmic_muon_properties_;
-    G4PhysicsOrderedFreeVector cosmic_muon_zenith_angle_distribution_CDF_;
-    G4PhysicsOrderedFreeVector cosmic_muon_energy_spectrum_CDF_;
+    G4ParticleGun* fpParticleGun;
+    std::map<std::string, G4PVDataVector> fCosmicMuonProperties;
+    G4PhysicsOrderedFreeVector fCosmicMuonZenithAngleDistributionCDF;
+    G4PhysicsOrderedFreeVector fCosmicMuonEnergySpectrumCDF;
+    G4double fSphereRadius;
 
 public:
     sbPrimaryGeneratorAction();
     virtual ~sbPrimaryGeneratorAction();
     virtual void GeneratePrimaries(G4Event*);
-    inline const G4ParticleGun* GetParticleGun() const { return particle_gun_; }
+    inline const G4ParticleGun* GetParticleGun() const { return fpParticleGun; }
 
 private:
     inline G4ThreeVector RandomUpperHalfSpherePosition() const;

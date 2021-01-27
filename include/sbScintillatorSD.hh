@@ -4,9 +4,9 @@
 #include "G4VSensitiveDetector.hh"
 #include "G4String.hh"
 
-class sbScintillator : public G4VSensitiveDetector {
+class sbScintillatorSD : public G4VSensitiveDetector {
 public:
-    sbScintillator()
+    sbScintillatorSD(const G4String& hitCollectionName);
 };
 
 #endif
