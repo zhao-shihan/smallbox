@@ -7,13 +7,9 @@
 #else
 #include "G4RunManager.hh"
 #endif
-
 #include "G4UImanager.hh"
-
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
-
-#include "Randomize.hh"
 
 int main(int argc, char** argv) {
     // Detect interactive mode (if no arguments) and define UI session
@@ -24,6 +20,8 @@ int main(int argc, char** argv) {
     }
 
     // Optionally: choose a different Random engine...
+    //
+    // #include "Randomize.hh"
     // G4Random::setTheEngine(new CLHEP::MTwistEngine);
 
     // Construct the default run manager
@@ -37,7 +35,7 @@ int main(int argc, char** argv) {
     // Set mandatory initialization classes
     //
     // Detector construction
-    runManager->SetUserInitialization(sbDetectorConstruction::GetInstance());
+    runManager->SetUserInitialization(sbDetectorConstruction::GetsbDCInstance());
 
     // Physics list
     runManager->SetUserInitialization(new sbPhysicsList());
@@ -58,16 +56,16 @@ int main(int argc, char** argv) {
     // Process macro or start UI session
     //
     UImanager->ApplyCommand("/control/macroPath macros");
-    if (!ui) {
-        // batch mode
-        G4String command = "/control/execute ";
-        G4String fileName = argv[1];
-        UImanager->ApplyCommand(command + fileName);
-    } else {
+    if (ui) {
         // interactive mode
         UImanager->ApplyCommand("/control/execute /init_vis.mac");
         ui->SessionStart();
         delete ui;
+    } else {
+        // batch mode
+        G4String command = "/control/execute ";
+        G4String fileName = argv[1];
+        UImanager->ApplyCommand(command + fileName);
     }
 
     // Job termination

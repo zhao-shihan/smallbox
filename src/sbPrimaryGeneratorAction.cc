@@ -16,7 +16,7 @@ sbPrimaryGeneratorAction::sbPrimaryGeneratorAction() :
         &fCosmicMuonProperties["energy"][0],
         fCosmicMuonProperties["energy"].size()
     ),
-    fSphereRadius(sbDetectorConstruction::GetInstance()->getWorldRadius() - 1.0) {}
+    fSphereRadius(gWorldRadius - 1.0) {}
 
 sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
     delete fpParticleGun;

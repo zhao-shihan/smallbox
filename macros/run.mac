@@ -1,7 +1,8 @@
 # Macro file for run in batch, without graphic
 #
 # Change the default number of workers (in multi-threading mode) 
-/run/useMaximumLogicalCores
+#/run/useMaximumLogicalCores
+/run/numberOfThreads 1
 #
 # Initialize kernel
 /run/initialize
@@ -11,4 +12,4 @@
 /event/verbose 0
 /tracking/verbose 0
 
-/run/beamOn 10000
+/run/beamOn 100
