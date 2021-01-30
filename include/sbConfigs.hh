@@ -15,7 +15,7 @@
 // If enabled, scintillation light propagation will be supressed
 // by setting absorption length at 0, which is unreal but
 // will accelerate computation when you don't care about light propagation.
-#define SB_SUPPRESS_SCINTILLATION_PROPAGATION    1
+#define SB_SUPPRESS_SCINTILLATION_PROPAGATION    0
 #endif
 
 #endif

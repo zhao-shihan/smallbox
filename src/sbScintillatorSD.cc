@@ -14,18 +14,24 @@ void sbScintillatorSD::Initialize(G4HCofThisEvent* hitCollectionOfThisEvent) {
 }
 
 G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
-    auto presentParticle = step->GetTrack()->GetDefinition();
-    if (presentParticle->GetParticleName() == "mu+" ||
-        presentParticle->GetParticleName() == "mu-") {
-        // Present step point.
-        auto preStepPoint = step->GetPreStepPoint();
-        // A new hit.
-        auto hit = new sbScintillatorHit(preStepPoint->GetPhysicalVolume()->GetName());
-        hit->SetPostion(preStepPoint->GetPosition());
-        hit->SetTime(preStepPoint->GetGlobalTime());
-        fMuonHitsCollection->insert(hit);
-        std::cout << "fuck" << std::endl;
-        return true;
-    } else { return false; }
+    auto presentParticle = step->GetTrack()->GetParticleDefinition();
+    if (presentParticle != G4MuonPlus::Definition() &&
+        presentParticle != G4MuonMinus::Definition()) {
+        return false;
+    }
+    // Present step point.
+    auto preStepPoint = step->GetPreStepPoint();
+    // A new hit.
+    auto hit = new sbScintillatorHit(preStepPoint->GetPhysicalVolume()->GetName());
+    hit->SetPostion(preStepPoint->GetPosition());
+    hit->SetTime(preStepPoint->GetGlobalTime());
+    fMuonHitsCollection->insert(hit);
+    if (presentParticle == G4MuonPlus::Definition()) {
+        std::cout << "mu+ fucked!" << G4endl;
+    } else {
+        std::cout << "mu- fucked!" << G4endl;
+    }
+    std::cout << "There are " << step->GetSecondary()->size() << " secondaries." << G4endl;
+    return true;
 }
 

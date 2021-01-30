@@ -3,14 +3,19 @@
 sbDetectorConstruction* sbDetectorConstruction::sbDCInstance = nullptr;
 
 sbDetectorConstruction::sbDetectorConstruction() :
-    fLogicalScintillator(nullptr) {}
+    fLogicalScintillator(nullptr),
+    fLogicalSiPM(nullptr) {}
 
 G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // Set if check overlaps
     //
-    constexpr G4bool enableCheckOverlaps = true;
+    constexpr G4bool checkOverlaps = true;
 
     G4NistManager* nist = G4NistManager::Instance();
+
+    // ============================================================================
+    // world
+    // ============================================================================
 
     // world material
     //
@@ -22,8 +27,8 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // world construction
 
-    G4Sphere* solidBigSphere = new G4Sphere(
-        "big_sphere",
+    G4Sphere* solidSphere = new G4Sphere(
+        "sphere",
         0.0,
         gWorldRadius,
         0.0,
@@ -31,27 +36,30 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         0.0,
         360 * deg
     );
-    G4Box* solidBigBox = new G4Box(
-        "big_box",
+    G4Box* solidSphereSubtrahend = new G4Box(
+        "sphere_subtrahend",
         gWorldRadius,
         gWorldRadius,
         gWorldRadius
     );
-    const G4ThreeVector bigSphereTransition(0.0, 0.0,
-        -gWorldRadius - (gScintillatorDistance / 2.0 + 2.0 * gScintillatorHalfSize[2]) - 5.0 * cm);
+    const G4ThreeVector subtrahendTransition(0.0, 0.0,
+        -gWorldRadius
+        - 0.5 * gScintillatorDistance
+        - 2.0 * gScintillatorHalfSize[2]
+        - gDistanceBetweenScintillatorAndWorldBottom
+    );
     G4SubtractionSolid* solidWorld = new G4SubtractionSolid(
         gWorldName,
-        solidBigSphere,
-        solidBigBox,
+        solidSphere,
+        solidSphereSubtrahend,
         nullptr,
-        bigSphereTransition
+        subtrahendTransition
     );
     G4LogicalVolume* logicalWorld = new G4LogicalVolume(
         solidWorld,
         worldMaterial,
         gWorldName
     );
-
     G4VPhysicalVolume* physicalWorld = new G4PVPlacement(
         0,
         G4ThreeVector(),
@@ -60,8 +68,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         0,
         false,
         0,
-        enableCheckOverlaps
+        checkOverlaps
     );
+
+    // ============================================================================
+    // scintillators
+    // ============================================================================
 
     // scintillator material
     //
@@ -91,9 +103,9 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // scintillators' position
 
-    const G4double scintillator1zPosition = gScintillatorDistance / 2.0 + gScintillatorHalfSize[2];
-    const G4ThreeVector scintillator1Position(0.0 * cm, 0.0 * cm, scintillator1zPosition);
-    const G4ThreeVector scintillator2Position(0.0 * cm, 0.0 * cm, -scintillator1zPosition);
+    const G4double scintillator1zPosition = 0.5 * gScintillatorDistance + gScintillatorHalfSize[2];
+    const G4ThreeVector scintillator1Position(0.0, 0.0, scintillator1zPosition);
+    const G4ThreeVector scintillator2Position(0.0, 0.0, -scintillator1zPosition);
 
     // physical scintillator 1 construction
 
@@ -106,7 +118,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logicalWorld,
         false,
         0,
-        enableCheckOverlaps
+        checkOverlaps
     );
 
     // physical scintillator 2 construction
@@ -120,8 +132,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logicalWorld,
         false,
         0,
-        enableCheckOverlaps
+        checkOverlaps
     );
+
+    // ============================================================================
+    // aluminum foils
+    // ============================================================================
 
     // aluminum foil material
     //
@@ -188,7 +204,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logicalWorld,
         false,
         0,
-        enableCheckOverlaps
+        checkOverlaps
     );
 
     // aluminum foil 2 construction
@@ -214,23 +230,139 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         logicalWorld,
         false,
         0,
-        enableCheckOverlaps
+        checkOverlaps
     );
 
 #if SB_ENABLE_OPTICAL_PHYSICS
     // aluminum foil 1&2 surface construction
 
-    G4LogicalSkinSurface* logicalAlFoil1Surface = new G4LogicalSkinSurface(
+    // G4LogicalSkinSurface* logicalAlFoil1Surface = 
+    new G4LogicalSkinSurface(
         gAlFoilsName.first + "_surface",
         logicalAlFoil1,
         alFoilOpticalSurface
     );
-    G4LogicalSkinSurface* logicalAlFoil2Surface = new G4LogicalSkinSurface(
+    // G4LogicalSkinSurface* logicalAlFoil2Surface = 
+    new G4LogicalSkinSurface(
         gAlFoilsName.second + "_surface",
         logicalAlFoil2,
         alFoilOpticalSurface
     );
 #endif
+
+    // ============================================================================
+    // SiPMs
+    // ============================================================================
+
+    // SiPM material
+    //
+    G4Material* SiPMMaterial = nist->FindOrBuildMaterial(gSiPMMaterialName);
+
+    // solid & logical SiPM construction
+
+    G4Box* solidSiPM = new G4Box(
+        "SiPM",
+        gSiPMHalfSize[0],
+        gSiPMHalfSize[1],
+        gSiPMHalfSize[2]
+    );
+    this->fLogicalSiPM = new G4LogicalVolume(
+        solidSiPM,
+        SiPMMaterial,
+        "SiPM"
+    );
+
+    // SiPMs' position
+
+    const G4double SiPM1zPosition =
+        0.5 * gScintillatorDistance + 2.0 * gScintillatorHalfSize[2] + gSiPMHalfSize[2];
+    const G4ThreeVector SiPM1Position(0.0, 0.0, SiPM1zPosition);
+    const G4ThreeVector SiPM2Position(0.0, 0.0, -SiPM1zPosition);
+
+    // physical SiPM 1 construction
+
+    // G4VPhysicalVolume* physicalSiPM1 =
+    new G4PVPlacement(
+        0,
+        SiPM1Position,
+        fLogicalSiPM,
+        gSiPMsName.first,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
+
+    // physical SiPM 2 construction
+
+    // G4VPhysicalVolume* physicalSiPM2 =
+    new G4PVPlacement(
+        0,
+        SiPM2Position,
+        fLogicalSiPM,
+        gSiPMsName.second,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
+
+    // ============================================================================
+    // PCBs
+    // ============================================================================
+
+    // PCB material
+    //
+    G4Material* PCBMaterial = nist->FindOrBuildMaterial(gPCBMaterialName);
+
+    // solid & logical PCB construction
+
+    G4Box* solidPCB = new G4Box(
+        "PCB",
+        gPCBHalfSize[0],
+        gPCBHalfSize[1],
+        gPCBHalfSize[2]
+    );
+    G4LogicalVolume* logicalPCB = new G4LogicalVolume(
+        solidPCB,
+        PCBMaterial,
+        "PCB"
+    );
+
+    // PCBs' position
+
+    const G4double PCB1zPosition =
+        0.5 * gScintillatorDistance + 2.0 * gScintillatorHalfSize[2] + 2.0 * gSiPMHalfSize[2] + gPCBHalfSize[2];
+    const G4ThreeVector PCB1Position(0.0, 0.0, PCB1zPosition);
+    const G4ThreeVector PCB2Position(0.0, 0.0, -PCB1zPosition);
+
+    // physical PCB 1 construction
+
+    // G4VPhysicalVolume* physicalPCB1 =
+    new G4PVPlacement(
+        0,
+        PCB1Position,
+        logicalPCB,
+        gPCBsName.first,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
+
+    // physical PCB 2 construction
+
+    // G4VPhysicalVolume* physicalPCB2 =
+    new G4PVPlacement(
+        0,
+        PCB2Position,
+        logicalPCB,
+        gPCBsName.second,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
 
     return physicalWorld;
 }

@@ -40,6 +40,10 @@ private:
     // Scintillator logical volume
     // Note: use for registering sensitive detector in ConstructSDandField().
     G4LogicalVolume* fLogicalScintillator;
+    //
+    // SiPM logical volume
+    // Note: use for registering sensitive detector in ConstructSDandField().
+    G4LogicalVolume* fLogicalSiPM;
     
 public:
     virtual G4VPhysicalVolume* Construct();
