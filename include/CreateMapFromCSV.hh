@@ -1,5 +1,5 @@
-#ifndef CREATE_MAP_FROM_CSV_H_
-#define CREATE_MAP_FROM_CSV_H_ 1
+#ifndef CREATE_MAP_FROM_CSV_H
+#define CREATE_MAP_FROM_CSV_H 1
 
 #include <fstream>
 #include <map>

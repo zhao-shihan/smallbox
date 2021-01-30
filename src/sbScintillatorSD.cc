@@ -1,7 +1,7 @@
 #include "sbScintillatorSD.hh"
 
-sbScintillatorSD::sbScintillatorSD(const G4String& sensitiveDetectorName) :
-    G4VSensitiveDetector(sensitiveDetectorName),
+sbScintillatorSD::sbScintillatorSD(const G4String& scintillatorSDName) :
+    G4VSensitiveDetector(scintillatorSDName),
     fMuonHitsCollection(nullptr) {
     collectionName.push_back("muon_hits_collection");
 }
@@ -27,11 +27,13 @@ G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     hit->SetTime(preStepPoint->GetGlobalTime());
     fMuonHitsCollection->insert(hit);
     if (presentParticle == G4MuonPlus::Definition()) {
-        std::cout << "mu+ fucked!" << G4endl;
+        std::cout << "mu+ hit scintillator " << hit->GetScintillatorID() << "!" << G4endl;
     } else {
-        std::cout << "mu- fucked!" << G4endl;
+        std::cout << "mu- hit scintillator " << hit->GetScintillatorID() << "!" << G4endl;
     }
-    std::cout << "There are " << step->GetSecondary()->size() << " secondaries." << G4endl;
     return true;
 }
+
+void sbScintillatorSD::EndOfEvent(G4HCofThisEvent*) {}
+
 

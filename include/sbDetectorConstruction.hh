@@ -21,6 +21,7 @@
 #include "sbConfigs.hh"
 #include "CreateMapFromCSV.hh"
 #include "sbScintillatorSD.hh"
+#include "sbSiPMSD.hh"
 
 class sbDetectorConstruction : public G4VUserDetectorConstruction {
 public:
@@ -53,7 +54,7 @@ private:
     //
     // World material optical properties setting.
     // -> Refraction index
-    void SetWorldOpticalProperties(G4Material* worldMaterial) const;
+    void SetWorldMaterialProperties(G4Material* worldMaterial) const;
     //
     // Scintillator material optical properties setting.
     // -> Absorption length
@@ -75,11 +76,15 @@ private:
     // -> Reemission fast time constant
     // -> Reemission Slow time constant
     // -> Reemission yield ratio
-    void SetScintillatorOpticalProperties(G4Material* scintillatorMaterial) const;
+    void SetScintillatorMaterialProperties(G4Material* scintillatorMaterial) const;
     // 
     // Aluminum foil surface optical properties setting.
     // -> Reflectivity
-    void SetAlFoilOpticalProperties(G4OpticalSurface* alFoilOpticalSurface) const;
+    void SetAlFoilSurfaceProperties(G4OpticalSurface* alFoilOpticalSurface) const;
+    // 
+    // SiPM surface optical properties setting.
+    // -> Reflectivity
+    void SetSiPMSurfaceProperties(G4OpticalSurface* SiPMOpticalSurface) const;
 };
 
 #endif

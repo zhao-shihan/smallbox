@@ -1,5 +1,5 @@
-#ifndef SB_SCINTILLATOR_HIT_H_
-#define SB_SCINTILLATOR_HIT_H_ 1
+#ifndef SB_SCINTILLATOR_HIT_H
+#define SB_SCINTILLATOR_HIT_H 1
 
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"

@@ -20,9 +20,8 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // world material
     //
     G4Material* worldMaterial = nist->FindOrBuildMaterial(gWorldMaterialName);
-
 #if SB_ENABLE_OPTICAL_PHYSICS
-    SetWorldOpticalProperties(worldMaterial);
+    SetWorldMaterialProperties(worldMaterial);
 #endif
 
     // world construction
@@ -82,9 +81,8 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4Element* elementC = new G4Element("Carbon", "C", 6.0, 12.01 * g / mole);
     scintillatorMaterial->AddElement(elementC, 9);
     scintillatorMaterial->AddElement(elementH, 10);
-
 #if SB_ENABLE_OPTICAL_PHYSICS
-    SetScintillatorOpticalProperties(scintillatorMaterial);
+    SetScintillatorMaterialProperties(scintillatorMaterial);
 #endif
 
     // solid & logical scintillator construction
@@ -142,18 +140,6 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // aluminum foil material
     //
     G4Material* alFoilMaterial = nist->FindOrBuildMaterial(gAlFoilMaterialName);
-
-#if SB_ENABLE_OPTICAL_PHYSICS
-    // aluminum foil optical surface
-    //
-    G4OpticalSurface* alFoilOpticalSurface = new G4OpticalSurface(
-        "alFoilOpticalSurface",
-        unified,
-        polished,
-        dielectric_metal
-    );
-    SetAlFoilOpticalProperties(alFoilOpticalSurface);
-#endif
 
     // solid & logical aluminum foil construction
 
@@ -234,8 +220,17 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     );
 
 #if SB_ENABLE_OPTICAL_PHYSICS
-    // aluminum foil 1&2 surface construction
+    // aluminum foil 1&2 optical surface construction
 
+    // aluminum foil optical surface
+    //
+    G4OpticalSurface* alFoilOpticalSurface = new G4OpticalSurface(
+        "alFoilOpticalSurface",
+        unified,
+        polished,
+        dielectric_metal
+    );
+    SetAlFoilSurfaceProperties(alFoilOpticalSurface);
     // G4LogicalSkinSurface* logicalAlFoil1Surface = 
     new G4LogicalSkinSurface(
         gAlFoilsName.first + "_surface",
@@ -307,6 +302,32 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         checkOverlaps
     );
 
+#if SB_ENABLE_OPTICAL_PHYSICS
+    // SiPM 1&2 surface construction
+    
+    // SiPM optical surface
+    //
+    G4OpticalSurface* SiPMOpticalSurface = new G4OpticalSurface(
+        "alFoilOpticalSurface",
+        unified,
+        polished,
+        dielectric_metal
+    );
+    SetSiPMSurfaceProperties(SiPMOpticalSurface);
+    // G4LogicalSkinSurface* logicalSiPM1Surface = 
+    new G4LogicalSkinSurface(
+        gSiPMsName.first + "_surface",
+        fLogicalSiPM,
+        SiPMOpticalSurface
+    );
+    // G4LogicalSkinSurface* logicalSiPM2Surface = 
+    new G4LogicalSkinSurface(
+        gSiPMsName.second + "_surface",
+        fLogicalSiPM,
+        SiPMOpticalSurface
+    );
+#endif
+
     // ============================================================================
     // PCBs
     // ============================================================================
@@ -368,14 +389,20 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 }
 
 void sbDetectorConstruction::ConstructSDandField() {
-    sbScintillatorSD* scintillatorSD = new sbScintillatorSD(gSensitiveDetectorName);
-    G4SDManager::GetSDMpointer()->AddNewDetector(scintillatorSD);
+    auto SDManager = G4SDManager::GetSDMpointer();
+
+    sbScintillatorSD* scintillatorSD = new sbScintillatorSD(gScintillatorSDName);
+    SDManager->AddNewDetector(scintillatorSD);
     SetSensitiveDetector(fLogicalScintillator, scintillatorSD);
+
+    sbSiPMSD* SiPMSD = new sbSiPMSD(gSiPMSDName);
+    SDManager->AddNewDetector(SiPMSD);
+    SetSensitiveDetector(fLogicalSiPM, SiPMSD);
 }
 
 #if SB_ENABLE_OPTICAL_PHYSICS
 
-void sbDetectorConstruction::SetWorldOpticalProperties(G4Material* worldMaterial) const {
+void sbDetectorConstruction::SetWorldMaterialProperties(G4Material* worldMaterial) const {
     G4MaterialPropertiesTable* worldPropertiesTable = new G4MaterialPropertiesTable();
 
     // Refraction index
@@ -392,7 +419,7 @@ void sbDetectorConstruction::SetWorldOpticalProperties(G4Material* worldMaterial
     worldMaterial->SetMaterialPropertiesTable(worldPropertiesTable);
 }
 
-void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material* scintillatorMaterial) const {
+void sbDetectorConstruction::SetScintillatorMaterialProperties(G4Material* scintillatorMaterial) const {
     G4MaterialPropertiesTable* scintillatorPropertiesTable = new G4MaterialPropertiesTable();
     auto scintillatorProperties(CreateMapFromCSV<G4double>("./datafiles/scintillatorProperties.csv"));
 
@@ -478,7 +505,7 @@ void sbDetectorConstruction::SetScintillatorOpticalProperties(G4Material* scinti
     scintillatorMaterial->GetIonisation()->SetBirksConstant(0.15 * mm / MeV);
 }
 
-void sbDetectorConstruction::SetAlFoilOpticalProperties(G4OpticalSurface* alFoilOpticalSurface) const {
+void sbDetectorConstruction::SetAlFoilSurfaceProperties(G4OpticalSurface* alFoilOpticalSurface) const {
     G4MaterialPropertiesTable* alFoilPropertiesTable = new G4MaterialPropertiesTable();
 
     // Reflectivity
@@ -497,6 +524,23 @@ void sbDetectorConstruction::SetAlFoilOpticalProperties(G4OpticalSurface* alFoil
 
     // Set!
     alFoilOpticalSurface->SetMaterialPropertiesTable(alFoilPropertiesTable);
+}
+
+void sbDetectorConstruction::SetSiPMSurfaceProperties(G4OpticalSurface* SiPMOpticalSurface) const {
+    G4MaterialPropertiesTable* SiPMPropertiesTable = new G4MaterialPropertiesTable();
+
+    // Reflectivity
+    G4double reflectionPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
+    G4double reflectivity[2] = { 0.3, 0.3 };
+    SiPMPropertiesTable->AddProperty(
+        "REFLECTIVITY",
+        reflectionPhotonEnergy,
+        reflectivity,
+        2
+    );
+
+    // Set!
+    SiPMOpticalSurface->SetMaterialPropertiesTable(SiPMPropertiesTable);
 }
 
 #endif

@@ -13,11 +13,12 @@ private:
     sbScintillatorHitsCollection* fMuonHitsCollection;
 
 public:
-    sbScintillatorSD(const G4String& sensitiveDetectorName);
+    sbScintillatorSD(const G4String& scintillatorSDName);
     virtual ~sbScintillatorSD();
 
     virtual void Initialize(G4HCofThisEvent* eventHitCollection);
     virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory*);
+    virtual void EndOfEvent(G4HCofThisEvent*);
 };
 
 #endif
