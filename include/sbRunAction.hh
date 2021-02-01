@@ -4,13 +4,15 @@
 #include "G4UserRunAction.hh"
 #include "G4Accumulable.hh"
 #include "globals.hh"
+#include "g4analysis.hh"
+#include "sbGlobal.hh"
 
 class G4Run;
 
-class RunAction : public G4UserRunAction {
+class sbRunAction : public G4UserRunAction {
 public:
-    RunAction();
-    virtual ~RunAction();
+    sbRunAction();
+    virtual ~sbRunAction();
 
     // virtual G4Run* GenerateRun();
     virtual void BeginOfRunAction(const G4Run*);

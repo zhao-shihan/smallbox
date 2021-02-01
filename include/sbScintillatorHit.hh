@@ -10,10 +10,11 @@
 
 class sbScintillatorHit : public G4VHit {
 private:
-    G4int fScintillatorID;
-    G4double fTime;
+    G4int         fScintillatorID;
+    G4double      fTime;
     G4ThreeVector fPosition;
-    G4double fEnergyDeposition;
+    G4double      fKineticEnergy;
+    G4double      fEnergyDeposition;
 
 public:
     sbScintillatorHit();

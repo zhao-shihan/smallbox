@@ -1,10 +1,10 @@
 #include "sbEventAction.hh"
 
-EventAction::EventAction(RunAction* runAction) : G4UserEventAction(), fRunAction(runAction) {}
+sbEventAction::sbEventAction(sbRunAction* runAction) : G4UserEventAction(), fRunAction(runAction) {}
 
-EventAction::~EventAction() {}
+sbEventAction::~sbEventAction() {}
 
-void EventAction::BeginOfEventAction(const G4Event*) {}
+void sbEventAction::BeginOfEventAction(const G4Event*) {}
 
-void EventAction::EndOfEventAction(const G4Event*) {}
+void sbEventAction::EndOfEventAction(const G4Event*) {}
 

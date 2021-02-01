@@ -7,12 +7,14 @@ sbScintillatorHit::sbScintillatorHit() :
     fScintillatorID(-1),
     fTime(0.0),
     fPosition(0.0),
+    fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {}
 
 sbScintillatorHit::sbScintillatorHit(const G4String& scintillatorName) :
     G4VHit(),
     fTime(0.0),
     fPosition(0.0),
+    fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {
     if (scintillatorName == gScintillatorsName.first) {
         fScintillatorID = 1;
@@ -37,6 +39,7 @@ sbScintillatorHit::sbScintillatorHit(const sbScintillatorHit& rhs) :
     fScintillatorID(rhs.fScintillatorID),
     fTime(rhs.fTime),
     fPosition(rhs.fPosition),
+    fKineticEnergy(rhs.fKineticEnergy),
     fEnergyDeposition(rhs.fEnergyDeposition) {}
 
 sbScintillatorHit::~sbScintillatorHit() {}
@@ -46,6 +49,7 @@ const sbScintillatorHit& sbScintillatorHit::operator=(const sbScintillatorHit& r
         this->fScintillatorID = rhs.fScintillatorID;
         this->fTime = rhs.fTime;
         this->fPosition = rhs.fPosition;
+        this->fKineticEnergy = rhs.fKineticEnergy;
         this->fEnergyDeposition = rhs.fEnergyDeposition;
     }
     return *this;

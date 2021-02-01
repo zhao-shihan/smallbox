@@ -22,10 +22,12 @@ G4bool sbSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     auto preStepPoint = step->GetPreStepPoint();
     // A new hit.
     auto hit = new sbSiPMHit(preStepPoint->GetPhysicalVolume()->GetName());
-    hit->SetPostion(preStepPoint->GetPosition());
     hit->SetTime(preStepPoint->GetGlobalTime());
+    hit->SetEnergy(preStepPoint->GetTotalEnergy());
+    hit->SetPostion(preStepPoint->GetPosition());
     fOpticalPhotonHitsCollection->insert(hit);
-    std::cout << "Gamma hit SiPM " << hit->GetSiPMID() << "!" << G4endl;
+    std::cout << hit->GetEnergy() / eV << "eV "
+        << "photon hit SiPM " << hit->GetSiPMID() << "!" << G4endl;
     return true;
 }
 

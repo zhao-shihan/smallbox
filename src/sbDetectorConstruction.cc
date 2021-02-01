@@ -26,33 +26,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // world construction
 
-    G4Sphere* solidSphere = new G4Sphere(
-        "sphere",
-        0.0,
-        gWorldRadius,
-        0.0,
-        360 * deg,
-        0.0,
-        360 * deg
-    );
-    G4Box* solidSphereSubtrahend = new G4Box(
-        "sphere_subtrahend",
-        gWorldRadius,
-        gWorldRadius,
-        gWorldRadius
-    );
-    const G4ThreeVector subtrahendTransition(0.0, 0.0,
-        -gWorldRadius
-        - 0.5 * gScintillatorDistance
-        - 2.0 * gScintillatorHalfSize[2]
-        - gDistanceBetweenScintillatorAndWorldBottom
-    );
-    G4SubtractionSolid* solidWorld = new G4SubtractionSolid(
+    G4Tubs* solidWorld = new G4Tubs(
         gWorldName,
-        solidSphere,
-        solidSphereSubtrahend,
-        nullptr,
-        subtrahendTransition
+        0.0,
+        gWorldRadius,
+        gWorldHalfHeight,
+        0,
+        2.0 * M_PI
     );
     G4LogicalVolume* logicalWorld = new G4LogicalVolume(
         solidWorld,
@@ -60,11 +40,11 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         gWorldName
     );
     G4VPhysicalVolume* physicalWorld = new G4PVPlacement(
-        0,
+        nullptr,
         G4ThreeVector(),
         logicalWorld,
         gWorldName,
-        0,
+        nullptr,
         false,
         0,
         checkOverlaps
@@ -99,18 +79,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         "scintillator"
     );
 
-    // scintillators' position
-
-    const G4double scintillator1zPosition = 0.5 * gScintillatorDistance + gScintillatorHalfSize[2];
-    const G4ThreeVector scintillator1Position(0.0, 0.0, scintillator1zPosition);
-    const G4ThreeVector scintillator2Position(0.0, 0.0, -scintillator1zPosition);
-
     // physical scintillator 1 construction
 
     // G4VPhysicalVolume* physicalScintillator1 =
     new G4PVPlacement(
         0,
-        scintillator1Position,
+        gScintillatorsPosition.first,
         fLogicalScintillator,
         gScintillatorsName.first,
         logicalWorld,
@@ -124,7 +98,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // G4VPhysicalVolume* physicalScintillator2 =
     new G4PVPlacement(
         0,
-        scintillator2Position,
+        gScintillatorsPosition.second,
         fLogicalScintillator,
         gScintillatorsName.second,
         logicalWorld,
@@ -184,7 +158,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // G4VPhysicalVolume* physicalAlFoil1 = 
     new G4PVPlacement(
         0,
-        scintillator1Position,
+        gScintillatorsPosition.first,
         logicalAlFoil1,
         gAlFoilsName.first,
         logicalWorld,
@@ -210,7 +184,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // G4VPhysicalVolume* physicalAlFoil2 = 
     new G4PVPlacement(
         0,
-        scintillator2Position,
+        gScintillatorsPosition.second,
         logicalAlFoil2,
         gAlFoilsName.second,
         logicalWorld,
@@ -267,19 +241,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         "SiPM"
     );
 
-    // SiPMs' position
-
-    const G4double SiPM1zPosition =
-        0.5 * gScintillatorDistance + 2.0 * gScintillatorHalfSize[2] + gSiPMHalfSize[2];
-    const G4ThreeVector SiPM1Position(0.0, 0.0, SiPM1zPosition);
-    const G4ThreeVector SiPM2Position(0.0, 0.0, -SiPM1zPosition);
-
     // physical SiPM 1 construction
 
     // G4VPhysicalVolume* physicalSiPM1 =
     new G4PVPlacement(
         0,
-        SiPM1Position,
+        gSiPMsPosition.first,
         fLogicalSiPM,
         gSiPMsName.first,
         logicalWorld,
@@ -293,7 +260,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // G4VPhysicalVolume* physicalSiPM2 =
     new G4PVPlacement(
         0,
-        SiPM2Position,
+        gSiPMsPosition.second,
         fLogicalSiPM,
         gSiPMsName.second,
         logicalWorld,
@@ -304,7 +271,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
 #if SB_ENABLE_OPTICAL_PHYSICS
     // SiPM 1&2 surface construction
-    
+
     // SiPM optical surface
     //
     G4OpticalSurface* SiPMOpticalSurface = new G4OpticalSurface(
@@ -350,19 +317,12 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         "PCB"
     );
 
-    // PCBs' position
-
-    const G4double PCB1zPosition =
-        0.5 * gScintillatorDistance + 2.0 * gScintillatorHalfSize[2] + 2.0 * gSiPMHalfSize[2] + gPCBHalfSize[2];
-    const G4ThreeVector PCB1Position(0.0, 0.0, PCB1zPosition);
-    const G4ThreeVector PCB2Position(0.0, 0.0, -PCB1zPosition);
-
     // physical PCB 1 construction
 
     // G4VPhysicalVolume* physicalPCB1 =
     new G4PVPlacement(
         0,
-        PCB1Position,
+        gPCBsPosition.first,
         logicalPCB,
         gPCBsName.first,
         logicalWorld,
@@ -376,7 +336,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // G4VPhysicalVolume* physicalPCB2 =
     new G4PVPlacement(
         0,
-        PCB2Position,
+        gPCBsPosition.second,
         logicalPCB,
         gPCBsName.second,
         logicalWorld,

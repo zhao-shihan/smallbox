@@ -4,23 +4,23 @@
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"
 
-class EventAction;
+class sbEventAction;
 
 class G4LogicalVolume;
 
 /// Stepping action class
 /// 
 
-class SteppingAction : public G4UserSteppingAction {
+class sbSteppingAction : public G4UserSteppingAction {
 public:
-    SteppingAction(EventAction* eventAction);
-    virtual ~SteppingAction();
+    sbSteppingAction(sbEventAction* eventAction);
+    virtual ~sbSteppingAction();
 
     // method from the base class
     virtual void UserSteppingAction(const G4Step*);
 
 private:
-    EventAction* fEventAction;
+    sbEventAction* fEventAction;
 };
 
 #endif

@@ -1,7 +1,4 @@
-#include "sbDetectorConstruction.hh"
-#include "sbActionInitialization.hh"
-#include "sbPhysicsList.hh"
-
+#include "G4GlobalConfig.hh"
 #ifdef G4MULTITHREADED
 #include "G4MTRunManager.hh"
 #else
@@ -11,6 +8,11 @@
 #include "G4VisExecutive.hh"
 #include "G4UIExecutive.hh"
 
+#include "sbDetectorConstruction.hh"
+#include "sbActionInitialization.hh"
+#include "sbPhysicsList.hh"
+#include "sbConfigs.hh"
+
 int main(int argc, char** argv) {
     // Detect interactive mode (if no arguments) and define UI session
     //
@@ -19,11 +21,12 @@ int main(int argc, char** argv) {
         ui = new G4UIExecutive(argc, argv);
     }
 
-    // Optionally: choose a different Random engine...
+    // Random engine seed.
     //
-    // #include "Randomize.hh"
-    // G4Random::setTheEngine(new CLHEP::MTwistEngine);
-
+#if SB_USING_TIME_RANDOM_SEED
+    CLHEP::HepRandom::setTheSeed((long)time(nullptr));
+#endif
+    
     // Construct the default run manager
     //
 #ifdef G4MULTITHREADED
@@ -58,7 +61,7 @@ int main(int argc, char** argv) {
     UImanager->ApplyCommand("/control/macroPath macros");
     if (ui) {
         // interactive mode
-        UImanager->ApplyCommand("/control/execute /init_vis.mac");
+        UImanager->ApplyCommand("/control/execute init_vis.mac");
         ui->SessionStart();
         delete ui;
     } else {

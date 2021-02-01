@@ -7,9 +7,9 @@
 #include "G4RunManager.hh"
 #include "G4LogicalVolume.hh"
 
-SteppingAction::SteppingAction(EventAction* eventAction) : G4UserSteppingAction(), fEventAction(eventAction) {}
+sbSteppingAction::sbSteppingAction(sbEventAction* eventAction) : G4UserSteppingAction(), fEventAction(eventAction) {}
 
-SteppingAction::~SteppingAction() {}
+sbSteppingAction::~sbSteppingAction() {}
 
-void SteppingAction::UserSteppingAction(const G4Step* /* step */) {}
+void sbSteppingAction::UserSteppingAction(const G4Step* /* step */) {}
 

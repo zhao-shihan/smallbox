@@ -7,18 +7,18 @@
 #include "G4Event.hh"
 #include "G4RunManager.hh"
 
-class RunAction;
+class sbRunAction;
 
-class EventAction : public G4UserEventAction {
+class sbEventAction : public G4UserEventAction {
 public:
-    EventAction(RunAction* runAction);
-    virtual ~EventAction();
+    sbEventAction(sbRunAction* runAction);
+    virtual ~sbEventAction();
 
     virtual void BeginOfEventAction(const G4Event* event);
     virtual void EndOfEventAction(const G4Event* event);
 
 private:
-    RunAction* fRunAction;
+    sbRunAction* fRunAction;
 };
 
 #endif

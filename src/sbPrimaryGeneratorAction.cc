@@ -6,17 +6,16 @@ sbPrimaryGeneratorAction::sbPrimaryGeneratorAction() :
     fCosmicMuonProperties(
         CreateMapFromCSV<G4double>("./datafiles/cosmicMuonProperties.csv")
     ),
-    fCosmicMuonZenithAngleDistributionCDF(
+    fCosmicMuonZenithDistributionCDFinv(
         &fCosmicMuonProperties["thetaDistribution"][0],
         &fCosmicMuonProperties["theta"][0],
         fCosmicMuonProperties["theta"].size()
     ),
-    fCosmicMuonEnergySpectrumCDF(
+    fCosmicMuonEnergySpectrumCDFinv(
         &fCosmicMuonProperties["energySpectrum"][0],
         &fCosmicMuonProperties["energy"][0],
         fCosmicMuonProperties["energy"].size()
-    ),
-    fSphereRadius(gWorldRadius - 1.0) {}
+    ) {}
 
 sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
     delete fpParticleGun;
@@ -24,34 +23,41 @@ sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
 
 void sbPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     if (G4UniformRand() > 0.545) {
-        fpParticleGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu-"));
+        fpParticleGun->SetParticleDefinition(G4MuonMinus::Definition());
     } else {
-        fpParticleGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("mu+"));
+        fpParticleGun->SetParticleDefinition(G4MuonPlus::Definition());
     }
-    fpParticleGun->SetParticlePosition(RandomUpperHalfSpherePosition());
+    
+    auto posAndDir = MuonPositionAndDirection();
+    fpParticleGun->SetParticlePosition(posAndDir.first);
+    fpParticleGun->SetParticleMomentumDirection(posAndDir.second);
+    
     fpParticleGun->SetParticleEnergy(CosmicMuonEnergySpectrum());
-    fpParticleGun->SetParticleMomentumDirection(CosmicMuonMomentumDirection());
 
     fpParticleGun->GeneratePrimaryVertex(anEvent);
 }
 
 constexpr G4double _2_pi = 2.0 * M_PI;
 
-inline G4ThreeVector sbPrimaryGeneratorAction::RandomUpperHalfSpherePosition() const {
-    G4double phi = _2_pi * G4UniformRand();
-    G4double theta = M_PI_2 * G4UniformRand();
-    G4double sin_theta = sin(theta);
-    return fSphereRadius * G4ThreeVector(sin_theta * cos(phi), sin_theta * sin(phi), cos(theta));
-}
+inline std::pair<G4ThreeVector, G4ThreeVector>
+sbPrimaryGeneratorAction::MuonPositionAndDirection() const {
+    auto sphereCentre = G4ThreeVector(
+        2.0 * G4UniformRand() - 1.0,
+        2.0 * G4UniformRand() - 1.0,
+        0.0
+    ) * gEffectiveRange;
 
-inline G4ThreeVector sbPrimaryGeneratorAction::CosmicMuonMomentumDirection() const {
     G4double phi = _2_pi * G4UniformRand();
-    G4double theta = fCosmicMuonZenithAngleDistributionCDF.Value(G4UniformRand());
-    G4double sin_theta = sin(theta);
-    return G4ThreeVector(sin_theta * cos(phi), sin_theta * sin(phi), -cos(theta));
-}
+    G4double theta = fCosmicMuonZenithDistributionCDFinv.Value(G4UniformRand());
+    G4double sinTheta = sin(theta);
+    auto relativePositionVec = G4ThreeVector(
+        sinTheta * cos(phi),
+        sinTheta * sin(phi),
+        cos(theta)
+    ) * gSphereRadius;
 
-inline G4double sbPrimaryGeneratorAction::CosmicMuonEnergySpectrum() const {
-    return fCosmicMuonEnergySpectrumCDF.Value(G4UniformRand()) * GeV;
+    auto directionVec = -relativePositionVec;
+
+    return std::pair<G4ThreeVector, G4ThreeVector>(relativePositionVec + sphereCentre, directionVec);
 }
 
