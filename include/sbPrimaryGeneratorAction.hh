@@ -43,4 +43,28 @@ private:
     }
 };
 
+constexpr G4double _2_pi = 2.0 * M_PI;
+
+inline std::pair<G4ThreeVector, G4ThreeVector>
+sbPrimaryGeneratorAction::MuonPositionAndDirection() const {
+    auto sphereCentre = G4ThreeVector(
+        2.0 * G4UniformRand() - 1.0,
+        2.0 * G4UniformRand() - 1.0,
+        0.0
+    ) * gEffectiveRange;
+
+    G4double phi = _2_pi * G4UniformRand();
+    G4double theta = fCosmicMuonZenithDistributionCDFinv.Value(G4UniformRand());
+    G4double sinTheta = sin(theta);
+    auto relativePositionVec = G4ThreeVector(
+        sinTheta * cos(phi),
+        sinTheta * sin(phi),
+        cos(theta)
+    ) * gSphereRadius;
+
+    auto directionVec = -relativePositionVec;
+
+    return std::pair<G4ThreeVector, G4ThreeVector>(relativePositionVec + sphereCentre, directionVec);
+}
+
 #endif

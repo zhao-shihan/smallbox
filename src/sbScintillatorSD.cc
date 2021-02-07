@@ -19,6 +19,7 @@ G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
         presentParticle != G4MuonMinus::Definition()) {
         return false;
     }
+    if (!step->IsFirstStepInVolume()) { return false; }
     // Present step point.
     auto preStepPoint = step->GetPreStepPoint();
     // A new hit.
@@ -27,9 +28,11 @@ G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     hit->SetTime(preStepPoint->GetGlobalTime());
     fMuonHitsCollection->insert(hit);
     if (presentParticle == G4MuonPlus::Definition()) {
-        std::cout << "mu+ hit scintillator " << hit->GetScintillatorID() << "!" << G4endl;
+        std::cout << "mu+ hit scintillator " << hit->GetScintillatorID()
+            << " at " << hit->GetTime() << G4endl;
     } else {
-        std::cout << "mu- hit scintillator " << hit->GetScintillatorID() << "!" << G4endl;
+        std::cout << "mu- hit scintillator " << hit->GetScintillatorID()
+            << " at " << hit->GetTime() << G4endl;
     }
     return true;
 }
