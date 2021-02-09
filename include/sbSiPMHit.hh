@@ -5,6 +5,7 @@
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
+#include "G4VPhysicalVolume.hh"
 
 #include "sbGlobal.hh"
 
@@ -15,9 +16,12 @@ private:
     G4double      fEnergy;
     G4ThreeVector fPosition;
 
+private:
+    static enum { fUpperSiPM, fLowerSiPM } fSiPMIDSet;
+
 public:
     sbSiPMHit();
-    sbSiPMHit(const G4String& SiPMName);
+    sbSiPMHit(G4VPhysicalVolume* physicalSiPM);
     sbSiPMHit(const sbSiPMHit& rhs);
     ~sbSiPMHit();
     const sbSiPMHit& operator=(const sbSiPMHit& rhs);
@@ -49,13 +53,13 @@ inline void* sbSiPMHit::operator new(size_t) {
 }
 
 inline void sbSiPMHit::operator delete(void* aHit) {
-    sbSiPMHitAllocator->FreeSingle((sbSiPMHit*)aHit);
+    sbSiPMHitAllocator->FreeSingle(static_cast<sbSiPMHit*>(aHit));
 }
 
 inline G4String sbSiPMHit::GetSiPMName() const {
-    if (this->fSiPMID == 1) {
+    if (this->fSiPMID == fUpperSiPM) {
         return gSiPMsName.first;
-    } else if (this->fSiPMID == 2) {
+    } else if (this->fSiPMID == fLowerSiPM) {
         return gSiPMsName.second;
     } else {
         G4ExceptionDescription exceptout;

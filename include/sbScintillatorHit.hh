@@ -5,6 +5,7 @@
 #include "G4THitsCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
+#include "G4VPhysicalVolume.hh"
 
 #include "sbGlobal.hh"
 
@@ -16,9 +17,12 @@ private:
     G4double      fKineticEnergy;
     G4double      fEnergyDeposition;
 
+private:
+    static enum { fUpperScintillator, fLowerScintillator } fScintillatorIDSet;
+
 public:
     sbScintillatorHit();
-    sbScintillatorHit(const G4String& scintillatorName);
+    sbScintillatorHit(G4VPhysicalVolume* physicalScintillator);
     sbScintillatorHit(const sbScintillatorHit& rhs);
     ~sbScintillatorHit();
     const sbScintillatorHit& operator=(const sbScintillatorHit& rhs);
@@ -26,15 +30,18 @@ public:
     inline void* operator new(size_t);
     inline void operator delete(void* aHit);
 
-    G4int GetScintillatorID() const { return fScintillatorID; }
+    G4int           GetScintillatorID() const { return fScintillatorID; }
     inline G4String GetScintillatorName() const;
-    void SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
-    G4double GetTime() const { return fTime; }
-    void SetTime(const G4double& time) { fTime = time; }
-    G4ThreeVector GetPosition() const { return fPosition; }
-    void SetPostion(const G4ThreeVector& position) { fPosition = position; }
-    G4double GetEnergyDeposition() const { return fEnergyDeposition; }
-    void SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
+    G4double        GetTime() const { return fTime; }
+    G4ThreeVector   GetPosition() const { return fPosition; }
+    G4double        GetKineticEnergy() const { return fKineticEnergy; }
+    G4double        GetEnergyDeposition() const { return fEnergyDeposition; }
+
+    void            SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
+    void            SetTime(const G4double& time) { fTime = time; }
+    void            SetPostion(const G4ThreeVector& position) { fPosition = position; }
+    void            SetKineticEnergy(const G4double& kineticEnergy) { fKineticEnergy = kineticEnergy; }
+    void            SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
 };
 
 typedef G4THitsCollection<sbScintillatorHit> sbScintillatorHitsCollection;
@@ -53,9 +60,9 @@ inline void sbScintillatorHit::operator delete(void* aHit) {
 }
 
 inline G4String sbScintillatorHit::GetScintillatorName() const {
-    if (this->fScintillatorID == 1) {
+    if (this->fScintillatorID == fUpperScintillator) {
         return gScintillatorsName.first;
-    } else if (this->fScintillatorID == 2) {
+    } else if (this->fScintillatorID == fLowerScintillator) {
         return gScintillatorsName.second;
     } else {
         G4ExceptionDescription exceptout;

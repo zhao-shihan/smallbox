@@ -1,4 +1,5 @@
 #include "sbSiPMHit.hh"
+#include "sbDetectorConstruction.hh"
 
 G4ThreadLocal G4Allocator<sbSiPMHit>* sbSiPMHitAllocator = nullptr;
 
@@ -9,22 +10,24 @@ sbSiPMHit::sbSiPMHit() :
     fEnergy(0.0),
     fPosition(0.0) {}
 
-sbSiPMHit::sbSiPMHit(const G4String& SiPMName) :
+sbSiPMHit::sbSiPMHit(G4VPhysicalVolume* physicalSiPM) :
     G4VHit(),
     fTime(0.0),
     fEnergy(0.0),
     fPosition(0.0) {
-    if (SiPMName == gSiPMsName.first) {
-        fSiPMID = 1;
-    } else if (SiPMName == gSiPMsName.second) {
-        fSiPMID = 2;
+    auto sbDC = sbDetectorConstruction::GetsbDCInstance();
+    if (physicalSiPM == sbDC->GetPhysicalSiPMs().first) {
+        fSiPMID = fUpperSiPM;
+    } else if (physicalSiPM == sbDC->GetPhysicalSiPMs().second) {
+        fSiPMID = fLowerSiPM;
     } else {
         G4ExceptionDescription exceptout;
-        exceptout << "SiPM named \"" + SiPMName + "\" not found." << G4endl;
+        exceptout << "The SiPM physical volume not found." << G4endl;
         exceptout << "This fSiPMID will be set to -1." << G4endl;
+        exceptout << "Maybe you have changed the detector construction?" << G4endl;
         G4Exception(
-            "sbSiPMHit::sbSiPMHit(const G4String& SiPMName)",
-            "SiPMNameNotFound",
+            "sbSiPMHit::sbSiPMHit(G4VPhysicalVolume* physicalSiPM)",
+            "SiPMNotFound",
             JustWarning,
             exceptout
         );

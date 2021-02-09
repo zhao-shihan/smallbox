@@ -32,7 +32,7 @@ G4OpticalPhysics* sbPhysicsList::OpticalPhysics_init() {
     pOptics->SetScintillationExcitationRatio(0.);
 
     //Cerenkov light
-    pOptics->SetMaxNumPhotonsPerStep(50);
+    pOptics->SetMaxNumPhotonsPerStep(-1);
 
     //wave length shifting (WLS)
     pOptics->SetWLSTimeProfile("delta");

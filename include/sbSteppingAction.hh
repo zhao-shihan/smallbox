@@ -16,7 +16,6 @@ public:
     sbSteppingAction(sbEventAction* eventAction);
     virtual ~sbSteppingAction();
 
-    // method from the base class
     virtual void UserSteppingAction(const G4Step*);
 
 private:

@@ -3,8 +3,6 @@
 
 #include "G4VSensitiveDetector.hh"
 #include "G4SDManager.hh"
-#include "G4MuonPlus.hh"
-#include "G4MuonMinus.hh"
 
 #include "sbScintillatorHit.hh"
 

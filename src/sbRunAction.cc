@@ -22,14 +22,19 @@ sbRunAction::sbRunAction() :
     analysisMgr->SetFileName(gRootFileName);
 
     // book histogram and ntuple
-    analysisMgr->CreateNtuple("Received", "Hits");
+#if SB_PROCESS_SIPM_HIT
+    // Upper SiPM, SiPM 0, tupleID = 0
+    analysisMgr->CreateNtuple("UpperSiPM", "Hits");
+    analysisMgr->CreateNtupleDColumn("HitTime");
     analysisMgr->CreateNtupleDColumn("PhotonEnergy");
     analysisMgr->FinishNtuple();
 
-    /* analysisMgr->CreateNtuple("Incident", "IncidentMuon");
-    analysisMgr->CreateNtupleDColumn("MuonEnergy");
-    analysisMgr->CreateNtupleDColumn("MuonMomentum");
-    analysisMgr->FinishNtuple(); */
+    // Lower SiPM, SiPM 1, tupleID = 1
+    analysisMgr->CreateNtuple("LowerSiPM", "Hits");
+    analysisMgr->CreateNtupleDColumn("HitTime");
+    analysisMgr->CreateNtupleDColumn("PhotonEnergy");
+    analysisMgr->FinishNtuple();
+#endif
 }
 
 sbRunAction::~sbRunAction() {

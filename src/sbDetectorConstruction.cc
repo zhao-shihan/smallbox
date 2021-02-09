@@ -81,8 +81,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // physical scintillator 1 construction
 
-    // G4VPhysicalVolume* physicalScintillator1 =
-    new G4PVPlacement(
+    this->fPhysicalScintillators.first = new G4PVPlacement(
         0,
         gScintillatorsPosition.first,
         fLogicalScintillator,
@@ -95,8 +94,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // physical scintillator 2 construction
 
-    // G4VPhysicalVolume* physicalScintillator2 =
-    new G4PVPlacement(
+    this->fPhysicalScintillators.second = new G4PVPlacement(
         0,
         gScintillatorsPosition.second,
         fLogicalScintillator,
@@ -226,6 +224,9 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // SiPM material
     //
     G4Material* SiPMMaterial = nist->FindOrBuildMaterial(gSiPMMaterialName);
+#if SB_ENABLE_OPTICAL_PHYSICS
+    SetSiPMMaterialProperties(SiPMMaterial);
+#endif
 
     // solid & logical SiPM construction
 
@@ -243,8 +244,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // physical SiPM 1 construction
 
-    // G4VPhysicalVolume* physicalSiPM1 =
-    new G4PVPlacement(
+    this->fPhysicalSiPMs.first = new G4PVPlacement(
         0,
         gSiPMsPosition.first,
         fLogicalSiPM,
@@ -257,8 +257,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // physical SiPM 2 construction
 
-    // G4VPhysicalVolume* physicalSiPM2 =
-    new G4PVPlacement(
+    this->fPhysicalSiPMs.second = new G4PVPlacement(
         0,
         gSiPMsPosition.second,
         fLogicalSiPM,
@@ -268,32 +267,6 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         0,
         checkOverlaps
     );
-
-#if SB_ENABLE_OPTICAL_PHYSICS
-    // SiPM 1&2 surface construction
-
-    // SiPM optical surface
-    //
-    G4OpticalSurface* SiPMOpticalSurface = new G4OpticalSurface(
-        "alFoilOpticalSurface",
-        unified,
-        polished,
-        dielectric_metal
-    );
-    SetSiPMSurfaceProperties(SiPMOpticalSurface);
-    // G4LogicalSkinSurface* logicalSiPM1Surface = 
-    new G4LogicalSkinSurface(
-        gSiPMsName.first + "_surface",
-        fLogicalSiPM,
-        SiPMOpticalSurface
-    );
-    // G4LogicalSkinSurface* logicalSiPM2Surface = 
-    new G4LogicalSkinSurface(
-        gSiPMsName.second + "_surface",
-        fLogicalSiPM,
-        SiPMOpticalSurface
-    );
-#endif
 
     // ============================================================================
     // PCBs
@@ -350,14 +323,16 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
 void sbDetectorConstruction::ConstructSDandField() {
     auto SDManager = G4SDManager::GetSDMpointer();
-
+#if SB_PROCESS_SCINTILLATOR_HIT
     sbScintillatorSD* scintillatorSD = new sbScintillatorSD(gScintillatorSDName);
     SDManager->AddNewDetector(scintillatorSD);
     SetSensitiveDetector(fLogicalScintillator, scintillatorSD);
-
+#endif
+#if SB_PROCESS_SIPM_HIT
     sbSiPMSD* SiPMSD = new sbSiPMSD(gSiPMSDName);
     SDManager->AddNewDetector(SiPMSD);
     SetSensitiveDetector(fLogicalSiPM, SiPMSD);
+#endif
 }
 
 #if SB_ENABLE_OPTICAL_PHYSICS
@@ -389,15 +364,8 @@ void sbDetectorConstruction::SetScintillatorMaterialProperties(G4Material* scint
         &scintillatorProperties["RINDEX"][0],
         scintillatorProperties["RINDEX"].size()
     );
-#if !SB_SUPPRESS_SCINTILLATION_PROPAGATION
-    scintillatorPropertiesTable->AddProperty(
-        "ABSLENGTH",
-        &scintillatorProperties["ABSLENGTH_energy"][0],
-        &scintillatorProperties["ABSLENGTH"][0],
-        scintillatorProperties["ABSLENGTH"].size()
-    );
-#else
-    // Surppress light propagation
+#if SB_KILL_SCINTILLATION_PHOTON
+    // Kill scintillation photon.
     G4double absorptionLengthPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
     G4double absorptionLength[2] = { 0.0, 0.0 };
     scintillatorPropertiesTable->AddProperty(
@@ -405,6 +373,13 @@ void sbDetectorConstruction::SetScintillatorMaterialProperties(G4Material* scint
         absorptionLengthPhotonEnergy,
         absorptionLength,
         2
+    );
+#else
+    scintillatorPropertiesTable->AddProperty(
+        "ABSLENGTH",
+        &scintillatorProperties["ABSLENGTH_energy"][0],
+        &scintillatorProperties["ABSLENGTH"][0],
+        scintillatorProperties["ABSLENGTH"].size()
     );
 #endif
     scintillatorPropertiesTable->AddProperty(
@@ -486,21 +461,21 @@ void sbDetectorConstruction::SetAlFoilSurfaceProperties(G4OpticalSurface* alFoil
     alFoilOpticalSurface->SetMaterialPropertiesTable(alFoilPropertiesTable);
 }
 
-void sbDetectorConstruction::SetSiPMSurfaceProperties(G4OpticalSurface* SiPMOpticalSurface) const {
+void sbDetectorConstruction::SetSiPMMaterialProperties(G4Material* SiPMMaterial) const {
     G4MaterialPropertiesTable* SiPMPropertiesTable = new G4MaterialPropertiesTable();
 
-    // Reflectivity
-    G4double reflectionPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
-    G4double reflectivity[2] = { 0.3, 0.3 };
+    // Refraction index
+    G4double refractionPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
+    G4double refractionIndex[2] = { 1.4, 1.4 };
     SiPMPropertiesTable->AddProperty(
-        "REFLECTIVITY",
-        reflectionPhotonEnergy,
-        reflectivity,
+        "RINDEX",
+        refractionPhotonEnergy,
+        refractionIndex,
         2
     );
 
     // Set!
-    SiPMOpticalSurface->SetMaterialPropertiesTable(SiPMPropertiesTable);
+    SiPMMaterial->SetMaterialPropertiesTable(SiPMPropertiesTable);
 }
 
 #endif

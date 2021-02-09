@@ -1,9 +1,8 @@
 #ifndef SB_DETECTOR_CONSTRUCTION_H
 #define SB_DETECTOR_CONSTRUCTION_H 1
 
-#include "G4VUserDetectorConstruction.hh"
 #include "globals.hh"
-
+#include "G4VUserDetectorConstruction.hh"
 #include "G4RunManager.hh"
 #include "G4NistManager.hh"
 #include "G4Box.hh"
@@ -13,7 +12,6 @@
 #include "G4SystemOfUnits.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4LogicalSkinSurface.hh"
-#include "G4LogicalBorderSurface.hh"
 #include "G4OpticalSurface.hh"
 #include "G4SDManager.hh"
 
@@ -42,12 +40,28 @@ private:
     // Note: use for registering sensitive detector in ConstructSDandField().
     G4LogicalVolume* fLogicalScintillator;
     //
+    // Scintillators physical volume
+    // Note: use for identifying scintillator in sbScintillatorHit.
+    std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*> fPhysicalScintillators;
+
+    //
     // SiPM logical volume
     // Note: use for registering sensitive detector in ConstructSDandField().
     G4LogicalVolume* fLogicalSiPM;
-    
+    //
+    // SiPMs physical volume
+    // Note: use for identifying SiPM in sbSiPMHit.
+    std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*> fPhysicalSiPMs;
+
 public:
     virtual G4VPhysicalVolume* Construct();
+
+    const std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*>& GetPhysicalScintillators() const {
+        return fPhysicalScintillators;
+    }
+    const std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*>& GetPhysicalSiPMs() const {
+        return fPhysicalSiPMs;
+    }
 
 private:
     virtual void ConstructSDandField();
@@ -83,8 +97,9 @@ private:
     void SetAlFoilSurfaceProperties(G4OpticalSurface* alFoilOpticalSurface) const;
     // 
     // SiPM surface optical properties setting.
-    // -> Reflectivity
-    void SetSiPMSurfaceProperties(G4OpticalSurface* SiPMOpticalSurface) const;
+    // -> Refraction index
+    // Note: for optical photon hit.
+    void SetSiPMMaterialProperties(G4Material* SiPMMaterial) const;
 };
 
 #endif

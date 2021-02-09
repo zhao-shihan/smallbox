@@ -39,14 +39,14 @@ std::map<std::string, std::vector<float_type>> CreateMapFromCSV(const std::strin
 
     std::ifstream fin(csvFileName);
     if (!fin.is_open()) {
-        G4ExceptionDescription exception_description;
-        exception_description << csvFileName + " not found." << G4endl;
-        exception_description << "Empty map will be created." << G4endl;
+        G4ExceptionDescription exceptout;
+        exceptout << csvFileName + " not found." << G4endl;
+        exceptout << "Empty map will be created." << G4endl;
         G4Exception(
             "CreateMapFromCSV(const std::string& csvFileName)",
             "DataFileNotFound",
             JustWarning,
-            exception_description
+            exceptout
         );
         return map<string, vector<float_type>>();
     }

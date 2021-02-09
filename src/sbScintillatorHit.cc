@@ -1,4 +1,5 @@
 #include "sbScintillatorHit.hh"
+#include "sbDetectorConstruction.hh"
 
 G4ThreadLocal G4Allocator<sbScintillatorHit>* sbScintillatorHitAllocator = nullptr;
 
@@ -10,27 +11,28 @@ sbScintillatorHit::sbScintillatorHit() :
     fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {}
 
-sbScintillatorHit::sbScintillatorHit(const G4String& scintillatorName) :
+sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator) :
     G4VHit(),
     fTime(0.0),
     fPosition(0.0),
     fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {
-    if (scintillatorName == gScintillatorsName.first) {
-        fScintillatorID = 1;
-    } else if (scintillatorName == gScintillatorsName.second) {
-        fScintillatorID = 2;
+    auto sbDC = sbDetectorConstruction::GetsbDCInstance();
+    if (physicalScintillator == sbDC->GetPhysicalScintillators().first) {
+        fScintillatorID = fUpperScintillator;
+    } else if (physicalScintillator == sbDC->GetPhysicalScintillators().second) {
+        fScintillatorID = fLowerScintillator;
     } else {
         G4ExceptionDescription exceptout;
-        exceptout << "Scintillator named \"" + scintillatorName + "\" not found." << G4endl;
-        exceptout << "This fScintillatorID will be set to -1." << G4endl;
+        exceptout << "The scintillators physical volume not found." << G4endl;
+        exceptout << "This fScintillatorsID will be set to -1." << G4endl;
+        exceptout << "Maybe you have changed the detector construction?" << G4endl;
         G4Exception(
-            "sbScintillatorHit::sbScintillatorHit(const G4String& scintillatorName)",
-            "ScintillatorNameNotFound",
+            "sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator)",
+            "ScintillatorNotFound",
             JustWarning,
             exceptout
         );
-        fScintillatorID = -1;
     }
 }
 
