@@ -16,8 +16,11 @@ private:
     G4double      fEnergy;
     G4ThreeVector fPosition;
 
-private:
-    static enum { fUpperSiPM, fLowerSiPM } fSiPMIDSet;
+public:
+    static enum sbSiPMSet {
+        fUpperSiPM,
+        fLowerSiPM
+    } fSiPMSet;
 
 public:
     sbSiPMHit();
@@ -29,16 +32,16 @@ public:
     inline void* operator new(size_t);
     inline void operator delete(void* aHit);
 
-    G4int           GetSiPMID() const { return fSiPMID; }
-    inline G4String GetSiPMName() const;
-    G4double        GetTime() const { return fTime; }
-    G4double        GetEnergy() const { return fEnergy; }
-    G4ThreeVector   GetPosition() const { return fPosition; }
+    const G4int& GetSiPMID() const { return fSiPMID; }
+    inline const G4String& GetSiPMName() const;
+    const G4double& GetTime() const { return fTime; }
+    const G4double& GetEnergy() const { return fEnergy; }
+    const G4ThreeVector& GetPosition() const { return fPosition; }
 
-    void            SetSiPMID(const G4int& SiPMID) { fSiPMID = SiPMID; }
-    void            SetTime(const G4double& time) { fTime = time; }
-    void            SetEnergy(const G4double& energy) { fEnergy = energy; }
-    void            SetPostion(const G4ThreeVector& position) { fPosition = position; }
+    void SetSiPMID(const G4int& SiPMID) { fSiPMID = SiPMID; }
+    void SetTime(const G4double& time) { fTime = time; }
+    void SetEnergy(const G4double& energy) { fEnergy = energy; }
+    void SetPostion(const G4ThreeVector& position) { fPosition = position; }
 };
 
 typedef G4THitsCollection<sbSiPMHit> sbSiPMHitsCollection;
@@ -56,23 +59,11 @@ inline void sbSiPMHit::operator delete(void* aHit) {
     sbSiPMHitAllocator->FreeSingle(static_cast<sbSiPMHit*>(aHit));
 }
 
-inline G4String sbSiPMHit::GetSiPMName() const {
+inline const G4String& sbSiPMHit::GetSiPMName() const {
     if (this->fSiPMID == fUpperSiPM) {
         return gSiPMsName.first;
-    } else if (this->fSiPMID == fLowerSiPM) {
-        return gSiPMsName.second;
     } else {
-        G4ExceptionDescription exceptout;
-        exceptout << "This fSiPMID is -1," << G4endl;
-        exceptout << "which means SiPM of this hit is not defined." << G4endl;
-        exceptout << "Will return \"unknown\"." << G4endl;
-        G4Exception(
-            "sbSiPMHit::GetSiPMName()",
-            "SiPMNameNotFound",
-            JustWarning,
-            exceptout
-        );
-        return "unknown";
+        return gSiPMsName.second;
     }
 }
 

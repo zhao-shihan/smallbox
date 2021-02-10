@@ -3,12 +3,15 @@
 
 #include "G4VSensitiveDetector.hh"
 #include "G4SDManager.hh"
+#include "g4analysis.hh"
 
 #include "sbScintillatorHit.hh"
 
 class sbScintillatorSD : public G4VSensitiveDetector {
 private:
     sbScintillatorHitsCollection* fMuonHitsCollection;
+    
+    G4ToolsAnalysisManager* fAnalysisManager;
 
 public:
     sbScintillatorSD(const G4String& scintillatorSDName);

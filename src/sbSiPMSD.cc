@@ -1,10 +1,15 @@
-#include "g4analysis.hh"
+#include <sstream>
+#include <mutex>
 
 #include "sbSiPMSD.hh"
+#include "sbRunAction.hh"
+
+G4int sbSiPMSD::fCurrentNtupleID = -1;
 
 sbSiPMSD::sbSiPMSD(const G4String& SiPMSDName) :
     G4VSensitiveDetector(SiPMSDName),
-    fOpticalPhotonHitsCollection(nullptr) {
+    fOpticalPhotonHitsCollection(nullptr),
+    fAnalysisManager(G4AnalysisManager::Instance()) {
     collectionName.push_back("optical_photon_hits_collection");
 }
 
@@ -25,13 +30,13 @@ G4bool sbSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     // A new hit.
     auto hit = new sbSiPMHit(preStepPoint->GetPhysicalVolume());
     hit->SetTime(preStepPoint->GetGlobalTime());
-    hit->SetEnergy(preStepPoint->GetTotalEnergy() / eV);
+    hit->SetEnergy(preStepPoint->GetTotalEnergy());
     hit->SetPostion(preStepPoint->GetPosition());
     fOpticalPhotonHitsCollection->insert(hit);
-    G4cout << step->GetTrack()->GetTrackID() << G4endl;
-    step->GetTrack()->SetTrackStatus(fStopAndKill);
     return true;
 }
+
+std::mutex mtx;
 
 void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     if (!fOpticalPhotonHitsCollection) {
@@ -46,15 +51,34 @@ void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
         );
         return;
     }
+    if (fOpticalPhotonHitsCollection->entries() == 0) {
+        return;
+    }
 
-    auto analysisManager = G4AnalysisManager::Instance();
+    // Prevent multiple threads from getting the same ntupleID.
+    mtx.lock();
+    fCurrentNtupleID += 2;
+    G4int upperSiPMntupleID = fCurrentNtupleID - 1;
+    G4int lowerSiPMntupleID = fCurrentNtupleID;
+    mtx.unlock();
+
+    G4cout << "sbSiPMSD::EndOfEvent is filling      ntuple "
+        << upperSiPMntupleID << " & " << lowerSiPMntupleID << " ... ";
+
     for (size_t i = 0; i < fOpticalPhotonHitsCollection->entries(); ++i) {
         auto hit = static_cast<sbSiPMHit*>(fOpticalPhotonHitsCollection->GetHit(i));
-
-        //Fill histogram and ntuple
-        analysisManager->FillNtupleDColumn(hit->GetSiPMID(), 0, hit->GetTime());
-        analysisManager->FillNtupleDColumn(hit->GetSiPMID(), 1, hit->GetEnergy());
-        analysisManager->AddNtupleRow(hit->GetSiPMID());
+        // Fill ntuple, need units.
+        if (hit->GetSiPMID() == sbSiPMHit::sbSiPMSet::fUpperSiPM) {
+            fAnalysisManager->FillNtupleDColumn(upperSiPMntupleID, 0, hit->GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(upperSiPMntupleID, 1, hit->GetEnergy() / eV);
+            fAnalysisManager->AddNtupleRow(upperSiPMntupleID);
+        } else {
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMntupleID, 0, hit->GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMntupleID, 1, hit->GetEnergy() / eV);
+            fAnalysisManager->AddNtupleRow(lowerSiPMntupleID);
+        }
     }
+
+    G4cout << "done." << G4endl;
 }
 

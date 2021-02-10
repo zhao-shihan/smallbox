@@ -4,10 +4,12 @@
 
 #include "sbScintillatorSD.hh"
 #include "sbConfigs.hh"
+#include "sbScintillatorHit.hh"
 
 sbScintillatorSD::sbScintillatorSD(const G4String& scintillatorSDName) :
     G4VSensitiveDetector(scintillatorSDName),
-    fMuonHitsCollection(nullptr) {
+    fMuonHitsCollection(nullptr),
+    fAnalysisManager(G4AnalysisManager::Instance()) {
     collectionName.push_back("muon_hits_collection");
 }
 
@@ -29,22 +31,39 @@ G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     auto preStepPoint = step->GetPreStepPoint();
     // A new hit.
     auto hit = new sbScintillatorHit(preStepPoint->GetPhysicalVolume());
-    hit->SetPostion(preStepPoint->GetPosition());
+    hit->SetPosition(preStepPoint->GetPosition());
     hit->SetTime(preStepPoint->GetGlobalTime());
     hit->SetKineticEnergy(preStepPoint->GetKineticEnergy());
+    hit->SetMomentumDirection(preStepPoint->GetMomentumDirection());
     fMuonHitsCollection->insert(hit);
-    if (presentParticle == G4MuonPlus::Definition()) {
-        G4cout << "mu+ hit scintillator " << hit->GetScintillatorID()
-            << " at " << hit->GetTime() << "ns with "
-            << hit->GetKineticEnergy() / GeV << "GeV" << G4endl;
-    } else {
-        G4cout << "mu- hit scintillator " << hit->GetScintillatorID()
-            << " at " << hit->GetTime() << "ns with "
-            << hit->GetKineticEnergy() / GeV << "GeV" << G4endl;
-    }
     return true;
 }
 
-void sbScintillatorSD::EndOfEvent(G4HCofThisEvent*) {}
+void sbScintillatorSD::EndOfEvent(G4HCofThisEvent*) {
+    if (!fMuonHitsCollection) {
+        G4ExceptionDescription exceptout;
+        exceptout << "fMuonHitsCollection is nullptr." << G4endl;
+        exceptout << "Maybe it was unexpectedly deleted?" << G4endl;
+        G4Exception(
+            "sbScintillatorSD::EndOfEvent(G4HCofThisEvent*)",
+            "HCNotFound",
+            JustWarning,
+            exceptout
+        );
+        return;
+    }
+
+    for (size_t i = 0; i < fMuonHitsCollection->entries(); ++i) {
+        auto hit = static_cast<sbScintillatorHit*>(fMuonHitsCollection->GetHit(i));
+        // Fill histrogram, no need of units.
+        if (hit->GetScintillatorID() == sbScintillatorHit::sbScintillatorSet::fUpperScintillator) {
+            fAnalysisManager->FillH1(0, hit->GetKineticEnergy());
+            fAnalysisManager->FillH1(2, M_PI - hit->GetMomentumDirection().theta());
+        } else {
+            fAnalysisManager->FillH1(1, hit->GetKineticEnergy());
+            fAnalysisManager->FillH1(3, M_PI - hit->GetMomentumDirection().theta());
+        }
+    }
+}
 
 

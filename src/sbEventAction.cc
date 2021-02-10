@@ -1,6 +1,9 @@
 #include "sbEventAction.hh"
+#include "sbGlobal.hh"
 
-sbEventAction::sbEventAction(sbRunAction* runAction) : G4UserEventAction(), fRunAction(runAction) {}
+sbEventAction::sbEventAction(sbRunAction* runAction) :
+    G4UserEventAction(),
+    fRunAction(runAction) {}
 
 sbEventAction::~sbEventAction() {}
 

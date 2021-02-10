@@ -37,7 +37,7 @@ public:
     inline const G4ParticleGun* GetParticleGun() const { return fpParticleGun; }
 
 private:
-    inline std::pair<G4ThreeVector, G4ThreeVector> MuonPositionAndDirection() const;
+    inline G4ThreeVectors MuonPositionAndDirection() const;
     inline G4double CosmicMuonEnergySpectrum() const {
         return fCosmicMuonEnergySpectrumCDFinv.Value(G4UniformRand()) * GeV;
     }
@@ -45,7 +45,7 @@ private:
 
 constexpr G4double _2_pi = 2.0 * M_PI;
 
-inline std::pair<G4ThreeVector, G4ThreeVector>
+inline G4ThreeVectors
 sbPrimaryGeneratorAction::MuonPositionAndDirection() const {
     auto sphereCentre = G4ThreeVector(
         2.0 * G4UniformRand() - 1.0,
@@ -64,7 +64,7 @@ sbPrimaryGeneratorAction::MuonPositionAndDirection() const {
 
     auto directionVec = -relativePositionVec;
 
-    return std::pair<G4ThreeVector, G4ThreeVector>(relativePositionVec + sphereCentre, directionVec);
+    return G4ThreeVectors(relativePositionVec + sphereCentre, directionVec);
 }
 
 #endif

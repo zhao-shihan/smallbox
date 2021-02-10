@@ -14,11 +14,15 @@ private:
     G4int         fScintillatorID;
     G4double      fTime;
     G4ThreeVector fPosition;
+    G4ThreeVector fMomentumDirection;
     G4double      fKineticEnergy;
     G4double      fEnergyDeposition;
 
-private:
-    static enum { fUpperScintillator, fLowerScintillator } fScintillatorIDSet;
+public:
+    static enum sbScintillatorSet {
+        fUpperScintillator,
+        fLowerScintillator
+    } fScintillatorSet;
 
 public:
     sbScintillatorHit();
@@ -30,18 +34,20 @@ public:
     inline void* operator new(size_t);
     inline void operator delete(void* aHit);
 
-    G4int           GetScintillatorID() const { return fScintillatorID; }
-    inline G4String GetScintillatorName() const;
-    G4double        GetTime() const { return fTime; }
-    G4ThreeVector   GetPosition() const { return fPosition; }
-    G4double        GetKineticEnergy() const { return fKineticEnergy; }
-    G4double        GetEnergyDeposition() const { return fEnergyDeposition; }
+    const G4int& GetScintillatorID() const { return fScintillatorID; }
+    inline const G4String& GetScintillatorName() const;
+    const G4double& GetTime() const { return fTime; }
+    const G4ThreeVector& GetPosition() const { return fPosition; }
+    const G4ThreeVector& GetMomentumDirection() const { return fMomentumDirection; }
+    const G4double& GetKineticEnergy() const { return fKineticEnergy; }
+    const G4double& GetEnergyDeposition() const { return fEnergyDeposition; }
 
-    void            SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
-    void            SetTime(const G4double& time) { fTime = time; }
-    void            SetPostion(const G4ThreeVector& position) { fPosition = position; }
-    void            SetKineticEnergy(const G4double& kineticEnergy) { fKineticEnergy = kineticEnergy; }
-    void            SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
+    void SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
+    void SetTime(const G4double& time) { fTime = time; }
+    void SetPosition(const G4ThreeVector& momentumDirection) { fMomentumDirection = momentumDirection; }
+    void SetMomentumDirection(const G4ThreeVector& position) { fPosition = position; }
+    void SetKineticEnergy(const G4double& kineticEnergy) { fKineticEnergy = kineticEnergy; }
+    void SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
 };
 
 typedef G4THitsCollection<sbScintillatorHit> sbScintillatorHitsCollection;
@@ -59,23 +65,11 @@ inline void sbScintillatorHit::operator delete(void* aHit) {
     sbScintillatorHitAllocator->FreeSingle((sbScintillatorHit*)aHit);
 }
 
-inline G4String sbScintillatorHit::GetScintillatorName() const {
+inline const G4String& sbScintillatorHit::GetScintillatorName() const {
     if (this->fScintillatorID == fUpperScintillator) {
         return gScintillatorsName.first;
-    } else if (this->fScintillatorID == fLowerScintillator) {
-        return gScintillatorsName.second;
     } else {
-        G4ExceptionDescription exceptout;
-        exceptout << "This fScintillatorID is -1," << G4endl;
-        exceptout << "which means scintillator of this hit is not defined." << G4endl;
-        exceptout << "Will return \"unknown\"." << G4endl;
-        G4Exception(
-            "sbScintillatorHit::GetScintillatorName()",
-            "ScintillatorNameNotFound",
-            JustWarning,
-            exceptout
-        );
-        return "unknown";
+        return gScintillatorsName.second;
     }
 }
 

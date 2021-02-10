@@ -22,7 +22,7 @@ sbPrimaryGeneratorAction::~sbPrimaryGeneratorAction() {
 }
 
 void sbPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
-    if (G4UniformRand() > 0.545) {
+    if (G4UniformRand() > 0.565) {
         fpParticleGun->SetParticleDefinition(G4MuonMinus::Definition());
     } else {
         fpParticleGun->SetParticleDefinition(G4MuonPlus::Definition());

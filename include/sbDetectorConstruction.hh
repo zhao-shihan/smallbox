@@ -96,10 +96,16 @@ private:
     // -> Reflectivity
     void SetAlFoilSurfaceProperties(G4OpticalSurface* alFoilOpticalSurface) const;
     // 
-    // SiPM surface optical properties setting.
+    // SiPM material optical properties setting.
     // -> Refraction index
-    // Note: for optical photon hit.
+    // -> Absorption length
+    // Note: For optical photon hit.
+    //       Refraction index should always syncronize with light guide!
     void SetSiPMMaterialProperties(G4Material* SiPMMaterial) const;
+    // 
+    // Light guide material optical properties setting.
+    // -> Refraction index
+    void SetLightGuideMaterialProperties(G4Material* lightGuideMaterial) const;
 };
 
 #endif

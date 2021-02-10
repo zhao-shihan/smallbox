@@ -20,16 +20,16 @@
 /vis/viewer/set/auxiliaryEdge false
 /vis/viewer/set/lineSegmentsPerCircle 100
 
-/vis/geometry/set/colour world 0 1 1 1 0.05
-/vis/geometry/set/colour scintillator 0 0 0 1 0.2
-/vis/geometry/set/colour al_foil_1 0 1 1 1 0.2
-/vis/geometry/set/colour al_foil_2 0 1 1 1 0.2
-/vis/geometry/set/colour SiPM 0 0.5 0.5 1 0.5
-/vis/geometry/set/colour PCB 0 0 1 0 0.2
+/vis/geometry/set/colour world        0   1   1   1   0.05
+/vis/geometry/set/colour scintillator 0   0   0   1   0.2
+/vis/geometry/set/colour al_foil      0   1   1   1   0.2
+/vis/geometry/set/colour SiPM         0   0.5 0.5 1   0.99
+/vis/geometry/set/colour light_guide  0   1   1   1   0.3
+/vis/geometry/set/colour PCB          0   0   1   0   0.3
 
 /vis/scene/add/trajectories
 /vis/modeling/trajectories/create/drawByCharge
-/vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true
+/vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts false
 /vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 2
 
 /vis/scene/endOfEventAction accumulate -1

@@ -4,7 +4,9 @@ sbDetectorConstruction* sbDetectorConstruction::sbDCInstance = nullptr;
 
 sbDetectorConstruction::sbDetectorConstruction() :
     fLogicalScintillator(nullptr),
-    fLogicalSiPM(nullptr) {}
+    fPhysicalScintillators(nullptr, nullptr),
+    fLogicalSiPM(nullptr),
+    fPhysicalSiPMs(nullptr, nullptr) {}
 
 G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // Set if check overlaps
@@ -57,10 +59,10 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // scintillator material
     //
     G4Material* scintillatorMaterial = new G4Material(gScintillatorMaterialName, 1.032 * g / cm3, 2, kStateSolid);
-    G4Element* elementH = new G4Element("Hydrogen", "H", 1.0, 1.008 * g / mole);
-    G4Element* elementC = new G4Element("Carbon", "C", 6.0, 12.01 * g / mole);
-    scintillatorMaterial->AddElement(elementC, 9);
-    scintillatorMaterial->AddElement(elementH, 10);
+    G4Element* H = nist->FindOrBuildElement("H");
+    G4Element* C = nist->FindOrBuildElement("C");
+    scintillatorMaterial->AddElement(C, 9);
+    scintillatorMaterial->AddElement(H, 10);
 #if SB_ENABLE_OPTICAL_PHYSICS
     SetScintillatorMaterialProperties(scintillatorMaterial);
 #endif
@@ -68,7 +70,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // solid & logical scintillator construction
 
     G4Box* solidScintillator = new G4Box(
-        "scintillator",
+        gScintillatorGeneralName,
         gScintillatorHalfSize[0],
         gScintillatorHalfSize[1],
         gScintillatorHalfSize[2]
@@ -76,13 +78,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     this->fLogicalScintillator = new G4LogicalVolume(
         solidScintillator,
         scintillatorMaterial,
-        "scintillator"
+        gScintillatorGeneralName
     );
 
-    // physical scintillator 1 construction
+    // physical upper scintillator construction
 
     this->fPhysicalScintillators.first = new G4PVPlacement(
-        0,
+        nullptr,
         gScintillatorsPosition.first,
         fLogicalScintillator,
         gScintillatorsName.first,
@@ -92,10 +94,10 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         checkOverlaps
     );
 
-    // physical scintillator 2 construction
+    // physical lower scintillator construction
 
     this->fPhysicalScintillators.second = new G4PVPlacement(
-        0,
+        nullptr,
         gScintillatorsPosition.second,
         fLogicalScintillator,
         gScintillatorsName.second,
@@ -116,48 +118,47 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // solid & logical aluminum foil construction
 
     G4Box* solidAlFoilAndScintillator = new G4Box(
-        "al_foil_and_scintillator",
+        gAlFoilGeneralName + "_and_" + gScintillatorGeneralName,
         gScintillatorHalfSize[0] + gAlFoilScintillatorGap + gAlFoilThickness,
         gScintillatorHalfSize[1] + gAlFoilScintillatorGap + gAlFoilThickness,
         gScintillatorHalfSize[2] + gAlFoilScintillatorGap + gAlFoilThickness
     );
     G4Box* solidVolumeInsideAlFoil = new G4Box(
-        "al_foil_subtrahend",
+        gAlFoilGeneralName + "_subtrahend",
         gScintillatorHalfSize[0] + gAlFoilScintillatorGap,
         gScintillatorHalfSize[1] + gAlFoilScintillatorGap,
         gScintillatorHalfSize[2] + gAlFoilScintillatorGap
     );
     G4SubtractionSolid* solidAlFoilWithoutHole = new G4SubtractionSolid(
-        "al_foil_without_hole",
+        gAlFoilGeneralName + "_without_hole",
         solidAlFoilAndScintillator,
         solidVolumeInsideAlFoil
     );
     G4Box* solidHole = new G4Box(
-        "al_foil_hole",
+        gAlFoilGeneralName + "_hole",
         gAlFoilHoleHalfWidth,
         gAlFoilHoleHalfWidth,
         0.5 * gAlFoilThickness
     );
-
-    // aluminum foil 1 construction
-
-    G4SubtractionSolid* solidAlFoil1 = new G4SubtractionSolid(
-        gAlFoilsName.first,
+    G4SubtractionSolid* solidAlFoil = new G4SubtractionSolid(
+        gAlFoilGeneralName,
         solidAlFoilWithoutHole,
         solidHole,
         nullptr,
         G4ThreeVector(0, 0, gScintillatorHalfSize[2] + gAlFoilScintillatorGap + 0.5 * gAlFoilThickness)
     );
-    G4LogicalVolume* logicalAlFoil1 = new G4LogicalVolume(
-        solidAlFoil1,
+    G4LogicalVolume* logicalAlFoil = new G4LogicalVolume(
+        solidAlFoil,
         alFoilMaterial,
-        gAlFoilsName.first
+        gAlFoilGeneralName
     );
-    // G4VPhysicalVolume* physicalAlFoil1 = 
+
+    // physical upper aluminum foils construction
+
     new G4PVPlacement(
-        0,
+        nullptr,
         gScintillatorsPosition.first,
-        logicalAlFoil1,
+        logicalAlFoil,
         gAlFoilsName.first,
         logicalWorld,
         false,
@@ -165,25 +166,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         checkOverlaps
     );
 
-    // aluminum foil 2 construction
+    // physical lower aluminum foils construction
 
-    G4SubtractionSolid* solidAlFoil2 = new G4SubtractionSolid(
-        gAlFoilsName.second,
-        solidAlFoilWithoutHole,
-        solidHole,
-        nullptr,
-        G4ThreeVector(0, 0, -gScintillatorHalfSize[2] - gAlFoilScintillatorGap - 0.5 * gAlFoilThickness)
-    );
-    G4LogicalVolume* logicalAlFoil2 = new G4LogicalVolume(
-        solidAlFoil2,
-        alFoilMaterial,
-        gAlFoilsName.second
-    );
-    // G4VPhysicalVolume* physicalAlFoil2 = 
+    auto filp = new G4RotationMatrix(G4ThreeVector(1.0, 0.0, 0.0), M_PI);
     new G4PVPlacement(
-        0,
+        filp,
         gScintillatorsPosition.second,
-        logicalAlFoil2,
+        logicalAlFoil,
         gAlFoilsName.second,
         logicalWorld,
         false,
@@ -192,27 +181,20 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     );
 
 #if SB_ENABLE_OPTICAL_PHYSICS
-    // aluminum foil 1&2 optical surface construction
+    // aluminum foil optical surface construction
 
     // aluminum foil optical surface
     //
     G4OpticalSurface* alFoilOpticalSurface = new G4OpticalSurface(
-        "alFoilOpticalSurface",
+        gAlFoilGeneralName + "_optical_surface",
         unified,
         polished,
         dielectric_metal
     );
     SetAlFoilSurfaceProperties(alFoilOpticalSurface);
-    // G4LogicalSkinSurface* logicalAlFoil1Surface = 
     new G4LogicalSkinSurface(
-        gAlFoilsName.first + "_surface",
-        logicalAlFoil1,
-        alFoilOpticalSurface
-    );
-    // G4LogicalSkinSurface* logicalAlFoil2Surface = 
-    new G4LogicalSkinSurface(
-        gAlFoilsName.second + "_surface",
-        logicalAlFoil2,
+        gAlFoilGeneralName + "_surface",
+        logicalAlFoil,
         alFoilOpticalSurface
     );
 #endif
@@ -231,7 +213,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // solid & logical SiPM construction
 
     G4Box* solidSiPM = new G4Box(
-        "SiPM",
+        gSiPMGeneralName,
         gSiPMHalfSize[0],
         gSiPMHalfSize[1],
         gSiPMHalfSize[2]
@@ -239,13 +221,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     this->fLogicalSiPM = new G4LogicalVolume(
         solidSiPM,
         SiPMMaterial,
-        "SiPM"
+        gSiPMGeneralName
     );
 
-    // physical SiPM 1 construction
+    // physical upper SiPM construction
 
     this->fPhysicalSiPMs.first = new G4PVPlacement(
-        0,
+        nullptr,
         gSiPMsPosition.first,
         fLogicalSiPM,
         gSiPMsName.first,
@@ -255,13 +237,77 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
         checkOverlaps
     );
 
-    // physical SiPM 2 construction
+    // physical lower SiPM construction
 
     this->fPhysicalSiPMs.second = new G4PVPlacement(
-        0,
+        nullptr,
         gSiPMsPosition.second,
         fLogicalSiPM,
         gSiPMsName.second,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
+
+    // ============================================================================
+    // light guides
+    // ============================================================================
+
+    // light guide materials
+    // 
+    G4Material* lightGuideMaterial = new G4Material(gLightGuideMaterialName, 0.97 * g / cm3, 4, kStateLiquid);
+    G4Element* O = nist->FindOrBuildElement("O");
+    G4Element* Si = nist->FindOrBuildElement("Si");
+    lightGuideMaterial->AddElement(C, 2);
+    lightGuideMaterial->AddElement(H, 6);
+    lightGuideMaterial->AddElement(Si, 1);
+    lightGuideMaterial->AddElement(O, 1);
+#if SB_ENABLE_OPTICAL_PHYSICS
+    SetLightGuideMaterialProperties(lightGuideMaterial);
+#endif
+
+    // solid & logical light guide construction
+
+    G4Box* solidLightGuideAndSiPM = new G4Box(
+        gLightGuideGeneralName + "_and_" + gSiPMGeneralName,
+        gLightGuideHalfWidth,
+        gLightGuideHalfWidth,
+        0.5 * gLightGuideThickness
+    );
+    G4SubtractionSolid* solidLightGuide = new G4SubtractionSolid(
+        gLightGuideGeneralName,
+        solidLightGuideAndSiPM,
+        solidSiPM,
+        nullptr,
+        G4ThreeVector(0, 0, gSiPMScintillatorGap - (0.5 * gLightGuideThickness - gSiPMHalfSize[2]))
+    );
+    G4LogicalVolume* logicalLightGuide = new G4LogicalVolume(
+        solidLightGuide,
+        lightGuideMaterial,
+        gLightGuideGeneralName
+    );
+
+    // physical upper light guide construction
+
+    new G4PVPlacement(
+        nullptr,
+        gLightGuidesPosition.first,
+        logicalLightGuide,
+        gLightGuidesName.first,
+        logicalWorld,
+        false,
+        0,
+        checkOverlaps
+    );
+
+    // physical lower light guide construction
+
+    new G4PVPlacement(
+        filp,
+        gLightGuidesPosition.second,
+        logicalLightGuide,
+        gLightGuidesName.second,
         logicalWorld,
         false,
         0,
@@ -279,7 +325,7 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     // solid & logical PCB construction
 
     G4Box* solidPCB = new G4Box(
-        "PCB",
+        gPCBGeneralName,
         gPCBHalfSize[0],
         gPCBHalfSize[1],
         gPCBHalfSize[2]
@@ -287,14 +333,13 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
     G4LogicalVolume* logicalPCB = new G4LogicalVolume(
         solidPCB,
         PCBMaterial,
-        "PCB"
+        gPCBGeneralName
     );
 
     // physical PCB 1 construction
 
-    // G4VPhysicalVolume* physicalPCB1 =
     new G4PVPlacement(
-        0,
+        nullptr,
         gPCBsPosition.first,
         logicalPCB,
         gPCBsName.first,
@@ -306,9 +351,8 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 
     // physical PCB 2 construction
 
-    // G4VPhysicalVolume* physicalPCB2 =
     new G4PVPlacement(
-        0,
+        nullptr,
         gPCBsPosition.second,
         logicalPCB,
         gPCBsName.second,
@@ -322,7 +366,9 @@ G4VPhysicalVolume* sbDetectorConstruction::Construct() {
 }
 
 void sbDetectorConstruction::ConstructSDandField() {
+#if SB_PROCESS_SCINTILLATOR_HIT || SB_PROCESS_SIPM_HIT
     auto SDManager = G4SDManager::GetSDMpointer();
+#endif
 #if SB_PROCESS_SCINTILLATOR_HIT
     sbScintillatorSD* scintillatorSD = new sbScintillatorSD(gScintillatorSDName);
     SDManager->AddNewDetector(scintillatorSD);
@@ -465,9 +511,35 @@ void sbDetectorConstruction::SetSiPMMaterialProperties(G4Material* SiPMMaterial)
     G4MaterialPropertiesTable* SiPMPropertiesTable = new G4MaterialPropertiesTable();
 
     // Refraction index
-    G4double refractionPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
-    G4double refractionIndex[2] = { 1.4, 1.4 };
+    G4double refractionPhotonEnergy[2] = { 1.587 * eV, 3.095 * eV };
+    G4double refractionIndex[2] = { 1.403, 1.406 };
     SiPMPropertiesTable->AddProperty(
+        "RINDEX",
+        refractionPhotonEnergy,
+        refractionIndex,
+        2
+    );
+    // Absorption length
+    G4double absorptionLengthPhotonEnergy[2] = { 1.0 * eV, 20.0 * eV };
+    G4double absorptionLength[2] = { 0.0, 0.0 };
+    SiPMPropertiesTable->AddProperty(
+        "ABSLENGTH",
+        absorptionLengthPhotonEnergy,
+        absorptionLength,
+        2
+    );
+
+    // Set!
+    SiPMMaterial->SetMaterialPropertiesTable(SiPMPropertiesTable);
+}
+
+void sbDetectorConstruction::SetLightGuideMaterialProperties(G4Material* lightGuideMaterial) const {
+    G4MaterialPropertiesTable* lightGuidePropertiesTable = new G4MaterialPropertiesTable();
+
+    // Refraction index
+    G4double refractionPhotonEnergy[2] = { 1.587 * eV, 3.095 * eV };
+    G4double refractionIndex[2] = { 1.403, 1.406 };
+    lightGuidePropertiesTable->AddProperty(
         "RINDEX",
         refractionPhotonEnergy,
         refractionIndex,
@@ -475,7 +547,7 @@ void sbDetectorConstruction::SetSiPMMaterialProperties(G4Material* SiPMMaterial)
     );
 
     // Set!
-    SiPMMaterial->SetMaterialPropertiesTable(SiPMPropertiesTable);
+    lightGuideMaterial->SetMaterialPropertiesTable(lightGuidePropertiesTable);
 }
 
 #endif

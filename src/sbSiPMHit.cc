@@ -23,15 +23,13 @@ sbSiPMHit::sbSiPMHit(G4VPhysicalVolume* physicalSiPM) :
     } else {
         G4ExceptionDescription exceptout;
         exceptout << "The SiPM physical volume not found." << G4endl;
-        exceptout << "This fSiPMID will be set to -1." << G4endl;
         exceptout << "Maybe you have changed the detector construction?" << G4endl;
         G4Exception(
             "sbSiPMHit::sbSiPMHit(G4VPhysicalVolume* physicalSiPM)",
             "SiPMNotFound",
-            JustWarning,
+            FatalException,
             exceptout
         );
-        fSiPMID = -1;
     }
 }
 

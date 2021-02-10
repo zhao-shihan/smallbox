@@ -8,6 +8,7 @@ sbScintillatorHit::sbScintillatorHit() :
     fScintillatorID(-1),
     fTime(0.0),
     fPosition(0.0),
+    fMomentumDirection(0.0),
     fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {}
 
@@ -15,6 +16,7 @@ sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator) :
     G4VHit(),
     fTime(0.0),
     fPosition(0.0),
+    fMomentumDirection(0.0),
     fKineticEnergy(0.0),
     fEnergyDeposition(0.0) {
     auto sbDC = sbDetectorConstruction::GetsbDCInstance();
@@ -24,13 +26,12 @@ sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator) :
         fScintillatorID = fLowerScintillator;
     } else {
         G4ExceptionDescription exceptout;
-        exceptout << "The scintillators physical volume not found." << G4endl;
-        exceptout << "This fScintillatorsID will be set to -1." << G4endl;
+        exceptout << "The scintillator physical volume not found." << G4endl;
         exceptout << "Maybe you have changed the detector construction?" << G4endl;
         G4Exception(
             "sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator)",
             "ScintillatorNotFound",
-            JustWarning,
+            FatalException,
             exceptout
         );
     }
@@ -41,6 +42,7 @@ sbScintillatorHit::sbScintillatorHit(const sbScintillatorHit& rhs) :
     fScintillatorID(rhs.fScintillatorID),
     fTime(rhs.fTime),
     fPosition(rhs.fPosition),
+    fMomentumDirection(rhs.fMomentumDirection),
     fKineticEnergy(rhs.fKineticEnergy),
     fEnergyDeposition(rhs.fEnergyDeposition) {}
 
@@ -51,6 +53,7 @@ const sbScintillatorHit& sbScintillatorHit::operator=(const sbScintillatorHit& r
         this->fScintillatorID = rhs.fScintillatorID;
         this->fTime = rhs.fTime;
         this->fPosition = rhs.fPosition;
+        this->fMomentumDirection = rhs.fMomentumDirection;
         this->fKineticEnergy = rhs.fKineticEnergy;
         this->fEnergyDeposition = rhs.fEnergyDeposition;
     }
