@@ -11,7 +11,6 @@
 
 class sbSiPMHit : public G4VHit {
 private:
-    G4int         fSiPMID;
     G4double      fTime;
     G4double      fEnergy;
     G4ThreeVector fPosition;
@@ -24,7 +23,6 @@ public:
 
 public:
     sbSiPMHit();
-    sbSiPMHit(G4VPhysicalVolume* physicalSiPM);
     sbSiPMHit(const sbSiPMHit& rhs);
     ~sbSiPMHit();
     const sbSiPMHit& operator=(const sbSiPMHit& rhs);
@@ -32,13 +30,10 @@ public:
     inline void* operator new(size_t);
     inline void operator delete(void* aHit);
 
-    const G4int& GetSiPMID() const { return fSiPMID; }
-    inline const G4String& GetSiPMName() const;
     const G4double& GetTime() const { return fTime; }
     const G4double& GetEnergy() const { return fEnergy; }
     const G4ThreeVector& GetPosition() const { return fPosition; }
 
-    void SetSiPMID(const G4int& SiPMID) { fSiPMID = SiPMID; }
     void SetTime(const G4double& time) { fTime = time; }
     void SetEnergy(const G4double& energy) { fEnergy = energy; }
     void SetPostion(const G4ThreeVector& position) { fPosition = position; }
@@ -57,14 +52,6 @@ inline void* sbSiPMHit::operator new(size_t) {
 
 inline void sbSiPMHit::operator delete(void* aHit) {
     sbSiPMHitAllocator->FreeSingle(static_cast<sbSiPMHit*>(aHit));
-}
-
-inline const G4String& sbSiPMHit::GetSiPMName() const {
-    if (this->fSiPMID == fUpperSiPM) {
-        return gSiPMsName.first;
-    } else {
-        return gSiPMsName.second;
-    }
 }
 
 #endif

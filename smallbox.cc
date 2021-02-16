@@ -13,6 +13,8 @@
 #include "sbPhysicsList.hh"
 #include "sbConfigs.hh"
 
+G4bool gRunningInBatch;
+
 int main(int argc, char** argv) {
     // Detect interactive mode (if no arguments) and define UI session
     //
@@ -20,19 +22,24 @@ int main(int argc, char** argv) {
     if (argc == 1) {
         ui = new G4UIExecutive(argc, argv);
     }
+    if (ui) {
+        gRunningInBatch = false;
+    } else {
+        gRunningInBatch = true;
+    }
 
     // Random engine seed.
     //
 #if SB_USING_TIME_RANDOM_SEED
     CLHEP::HepRandom::setTheSeed((long)time(nullptr));
 #endif
-    
+
     // Construct the default run manager
     //
 #ifdef G4MULTITHREADED
-    G4MTRunManager* runManager = new G4MTRunManager;
+    G4MTRunManager* runManager = new G4MTRunManager();
 #else
-    G4RunManager* runManager = new G4RunManager;
+    G4RunManager* runManager = new G4RunManager();
 #endif
 
     // Set mandatory initialization classes
@@ -59,16 +66,16 @@ int main(int argc, char** argv) {
     // Process macro or start UI session
     //
     UImanager->ApplyCommand("/control/macroPath macros");
-    if (ui) {
-        // interactive mode
-        UImanager->ApplyCommand("/control/execute init_vis.mac");
-        ui->SessionStart();
-        delete ui;
-    } else {
+    if (gRunningInBatch) {
         // batch mode
         G4String command = "/control/execute ";
         G4String fileName = argv[1];
         UImanager->ApplyCommand(command + fileName);
+    } else {
+        // interactive mode
+        UImanager->ApplyCommand("/control/execute init_vis.mac");
+        ui->SessionStart();
+        delete ui;
     }
 
     // Job termination

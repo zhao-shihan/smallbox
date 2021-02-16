@@ -6,24 +6,24 @@
 
 //
 // Using time for random seed if enabled.
-#define SB_USING_TIME_RANDOM_SEED                0
+#define SB_USING_TIME_RANDOM_SEED                false
 //
 // Enable optical physics. (Scintillation process, reflection, etc.)
 // If only care about hit, this can be disabled.
-#define SB_ENABLE_OPTICAL_PHYSICS                1
+#define SB_ENABLE_OPTICAL_PHYSICS                true
 //
 // Enable reflection on aluminum foil's surface.
-#define SB_ENABLE_AL_FOIL_REFLECTION             1
+#define SB_ENABLE_AL_FOIL_REFLECTION             true
 //
 // If enabled, optical photons will be absorbed immediately
 // when generated in scintillators.
-#define SB_KILL_SCINTILLATION_PHOTON             0
+#define SB_KILL_SCINTILLATION_PHOTON             false
 //
 // Process and save SiPM optical photon hit if enabled.
-#define SB_PROCESS_SIPM_HIT                      1
+#define SB_PROCESS_SIPM_HIT                      true
 //
 // Process and save scintillator muon hit if enabled.
-#define SB_PROCESS_SCINTILLATOR_HIT              1
+#define SB_PROCESS_SCINTILLATOR_HIT              true
 
 #endif
 

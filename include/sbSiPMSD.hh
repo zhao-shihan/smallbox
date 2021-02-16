@@ -13,8 +13,8 @@
 
 class sbSiPMSD : public G4VSensitiveDetector {
 private:
-    sbSiPMHitsCollection* fOpticalPhotonHitsCollection;
-    
+    std::pair<sbSiPMHitsCollection*, sbSiPMHitsCollection*> fSiPMPhotonHC;
+
     G4ToolsAnalysisManager* fAnalysisManager;
 
 public:
@@ -24,9 +24,16 @@ public:
     virtual void Initialize(G4HCofThisEvent* eventHitCollection);
     virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory*);
     virtual void EndOfEvent(G4HCofThisEvent*);
-    
+
     static G4int fCurrentNtupleID;
+
+private:
+    inline G4double SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const;
 };
+
+inline G4double sbSiPMSD::SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const {
+    return exp(-20.0 * elapsedTimeAfterHit);
+}
 
 #endif
 

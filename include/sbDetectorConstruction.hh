@@ -21,6 +21,8 @@
 #include "sbScintillatorSD.hh"
 #include "sbSiPMSD.hh"
 
+typedef std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*> G4VPhysicalVolumePair;
+
 class sbDetectorConstruction : public G4VUserDetectorConstruction {
 public:
     static sbDetectorConstruction* GetsbDCInstance() {
@@ -42,7 +44,7 @@ private:
     //
     // Scintillators physical volume
     // Note: use for identifying scintillator in sbScintillatorHit.
-    std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*> fPhysicalScintillators;
+    G4VPhysicalVolumePair fPhysicalScintillators;
 
     //
     // SiPM logical volume
@@ -51,17 +53,13 @@ private:
     //
     // SiPMs physical volume
     // Note: use for identifying SiPM in sbSiPMHit.
-    std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*> fPhysicalSiPMs;
+    G4VPhysicalVolumePair fPhysicalSiPMs;
 
 public:
     virtual G4VPhysicalVolume* Construct();
 
-    const std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*>& GetPhysicalScintillators() const {
-        return fPhysicalScintillators;
-    }
-    const std::pair<G4VPhysicalVolume*, G4VPhysicalVolume*>& GetPhysicalSiPMs() const {
-        return fPhysicalSiPMs;
-    }
+    const G4VPhysicalVolumePair& GetPhysicalScintillators() const { return fPhysicalScintillators; }
+    const G4VPhysicalVolumePair& GetPhysicalSiPMs() const { return fPhysicalSiPMs; }
 
 private:
     virtual void ConstructSDandField();
