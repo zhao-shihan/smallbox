@@ -9,7 +9,10 @@
 sbScintillatorSD::sbScintillatorSD(const G4String& scintillatorSDName) :
     G4VSensitiveDetector(scintillatorSDName),
     fMuonHitsCollection(nullptr),
-    fAnalysisManager(G4AnalysisManager::Instance()) {
+    fAnalysisManager(nullptr) {
+    if (gRunningInBatch) {
+        fAnalysisManager = G4AnalysisManager::Instance();
+    }
     collectionName.push_back("muon_hits_collection");
 }
 
@@ -52,7 +55,12 @@ void sbScintillatorSD::EndOfEvent(G4HCofThisEvent*) {
         );
         return;
     }
+    if (gRunningInBatch) {
+        FillHistrogram();
+    }
+}
 
+void sbScintillatorSD::FillHistrogram() const {
     for (size_t i = 0; i < fMuonHitsCollection->entries(); ++i) {
         auto hit = static_cast<sbScintillatorHit*>(fMuonHitsCollection->GetHit(i));
         // Fill histrogram, no need of units.
@@ -65,5 +73,4 @@ void sbScintillatorSD::EndOfEvent(G4HCofThisEvent*) {
         }
     }
 }
-
 

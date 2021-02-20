@@ -88,9 +88,10 @@ static const G4StringPair gPCBsName("upper_PCB", "lower_PCB");
 static const G4String gPCBMaterialName("G4_POLYCARBONATE");
 
 //
-// Analysis
+// Analysis & file io
 
 static const G4String gRootFileName("smallbox");
+static const G4String gSiPMResultCSVDestDir("SiPMresponse");
 
 #endif
 

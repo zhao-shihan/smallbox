@@ -19,6 +19,9 @@ public:
     virtual void   EndOfRunAction(const G4Run*);
 
     G4ToolsAnalysisManager* fAnalysisManager;
+
+private:
+    void CreateTreeAndHistrogram(G4int numberOfEvent) const;
 };
 
 #endif

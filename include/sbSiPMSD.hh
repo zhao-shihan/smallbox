@@ -25,14 +25,15 @@ public:
     virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory*);
     virtual void EndOfEvent(G4HCofThisEvent*);
 
-    static G4int fCurrentNtupleID;
+    static G4int fHitEventCount;
 
 private:
     inline G4double SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const;
+    void FillNtuple() const;
 };
 
 inline G4double sbSiPMSD::SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const {
-    return exp(-20.0 * elapsedTimeAfterHit);
+    return /* exp(-elapsedTimeAfterHit) */1.0;
 }
 
 #endif

@@ -1,16 +1,22 @@
 #include <sstream>
 #include <mutex>
+#include <algorithm>
+#include <fstream>
+#include <sstream>
 
 #include "sbSiPMSD.hh"
 #include "sbRunAction.hh"
 #include "sbDetectorConstruction.hh"
 
-G4int sbSiPMSD::fCurrentNtupleID = -1;
+G4int sbSiPMSD::fHitEventCount = -1;
 
 sbSiPMSD::sbSiPMSD(const G4String& SiPMSDName) :
     G4VSensitiveDetector(SiPMSDName),
     fSiPMPhotonHC(nullptr, nullptr),
-    fAnalysisManager(G4AnalysisManager::Instance()) {
+    fAnalysisManager(nullptr) {
+    if (gRunningInBatch) {
+        fAnalysisManager = G4AnalysisManager::Instance();
+    }
     collectionName.push_back("upper_optical_photon_hits_collection");
     collectionName.push_back("lower_optical_photon_hits_collection");
 }
@@ -35,7 +41,6 @@ G4bool sbSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     auto hit = new sbSiPMHit();
     hit->SetTime(preStepPoint->GetGlobalTime());
     hit->SetEnergy(preStepPoint->GetTotalEnergy());
-    hit->SetPostion(preStepPoint->GetPosition());
     if (preStepPoint->GetPhysicalVolume() ==
         sbDetectorConstruction::GetsbDCInstance()->GetPhysicalSiPMs().first) {
         fSiPMPhotonHC.first->insert(hit);
@@ -61,17 +66,23 @@ std::mutex mtx;
 
 void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     if (!fSiPMPhotonHC.first || !fSiPMPhotonHC.second) {
-        G4ExceptionDescription exceptout;
-        exceptout << "SiPM optical photon hits collection is null." << G4endl;
-        exceptout << "Maybe it was unexpectedly deleted?" << G4endl;
+        G4ExceptionDescription eout;
+        eout << "SiPM optical photon hits collection is null." << G4endl;
+        eout << "Maybe it was unexpectedly deleted?" << G4endl;
         G4Exception(
             "sbSiPMSD::EndOfEvent(G4HCofThisEvent*)",
             "HCNotFound",
             JustWarning,
-            exceptout
+            eout
         );
         return;
     }
+    if (gRunningInBatch) {
+        FillNtuple();
+    }
+}
+
+void sbSiPMSD::FillNtuple() const {
     G4bool emptyUpperHC = fSiPMPhotonHC.first->entries() == 0;
     G4bool emptyLowerHC = fSiPMPhotonHC.second->entries() == 0;
     if (emptyUpperHC && emptyLowerHC) {
@@ -80,32 +91,42 @@ void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
 
     // Prevent multiple threads from getting the same ntupleID.
     mtx.lock();
-    fCurrentNtupleID += 3;
-    G4int localCurrentNtupleID = fCurrentNtupleID;
+    ++fHitEventCount;
+    G4int localHitEventCount = fHitEventCount;
     mtx.unlock();
 
-    G4int upperSiPMHitNtupleID = localCurrentNtupleID - 2;
-    G4int lowerSiPMHitNtupleID = localCurrentNtupleID - 1;
-    G4int SiPMPhotoelectricResponseNtupleID = localCurrentNtupleID;
+    constexpr G4int numOfNtuples = 3;
+    G4int localCurrentFirstNtupleID = numOfNtuples * fHitEventCount;
+    G4int upperSiPMHitNtupleID = localCurrentFirstNtupleID;
+    G4int lowerSiPMHitNtupleID = upperSiPMHitNtupleID + 1;
+    G4int SiPMPhotoelectricResponseNtupleID = lowerSiPMHitNtupleID + 1;
 
-    G4cout << "sbSiPMSD::EndOfEvent is filling ntuple "
-        << upperSiPMHitNtupleID << " & "
-        << lowerSiPMHitNtupleID << " & "
-        << SiPMPhotoelectricResponseNtupleID << " ... ";
+    G4cout << "sbSiPMSD::FillNtuple is processing "
+        << fHitEventCount << "-th SiPM activated event ... ";
+
+    std::vector<sbSiPMHit> upperSiPMPhotonHitVec(fSiPMPhotonHC.first->entries());
+    for (size_t i = 0; i < upperSiPMPhotonHitVec.size(); ++i) {
+        upperSiPMPhotonHitVec[i] = *static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(i));
+    }
+    std::sort(upperSiPMPhotonHitVec.begin(), upperSiPMPhotonHitVec.end());
+
+    std::vector<sbSiPMHit> lowerSiPMPhotonHitVec(fSiPMPhotonHC.second->entries());
+    for (size_t i = 0; i < lowerSiPMPhotonHitVec.size(); ++i) {
+        lowerSiPMPhotonHitVec[i] = *static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(i));
+    }
+    std::sort(lowerSiPMPhotonHitVec.begin(), lowerSiPMPhotonHitVec.end());
 
     G4double upperFirstHitTime = 0.0;
     G4double upperHitTimeAvg = 0.0;
     if (!emptyUpperHC) {
-        upperFirstHitTime = static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(0))->GetTime() / ns;
-        upperHitTimeAvg = 0.0;
+        upperFirstHitTime = upperSiPMPhotonHitVec[0].GetTime() / ns;
         // Fill upper hit ntuple, need units.
         // time in ns, energy in eV.
-        for (size_t i = 0; i < fSiPMPhotonHC.first->entries(); ++i) {
-            auto hit = static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(i));
-            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 0, hit->GetTime() / ns);
-            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 1, hit->GetEnergy() / eV);
+        for (const auto& hit : upperSiPMPhotonHitVec) {
+            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 0, hit.GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 1, hit.GetEnergy() / eV);
             fAnalysisManager->AddNtupleRow(upperSiPMHitNtupleID);
-            upperHitTimeAvg += hit->GetTime();
+            upperHitTimeAvg += hit.GetTime();
         }
         upperHitTimeAvg /= ns * fSiPMPhotonHC.first->entries();
     }
@@ -113,24 +134,22 @@ void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     G4double lowerFirstHitTime = 0.0;
     G4double lowerHitTimeAvg = 0.0;
     if (!emptyLowerHC) {
-        lowerFirstHitTime = static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(0))->GetTime() / ns;
-        lowerHitTimeAvg = 0.0;
+        lowerFirstHitTime = lowerSiPMPhotonHitVec[0].GetTime() / ns;
         // Fill lower hit ntuple.
-        for (size_t i = 0; i < fSiPMPhotonHC.second->entries(); ++i) {
-            auto hit = static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(i));
-            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 0, hit->GetTime() / ns);
-            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 1, hit->GetEnergy() / eV);
+        for (const auto& hit : lowerSiPMPhotonHitVec) {
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 0, hit.GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 1, hit.GetEnergy() / eV);
             fAnalysisManager->AddNtupleRow(lowerSiPMHitNtupleID);
-            lowerHitTimeAvg += hit->GetTime();
+            lowerHitTimeAvg += hit.GetTime();
         }
         lowerHitTimeAvg /= ns * fSiPMPhotonHC.second->entries();
     }
 
     // Fill photoelectric response ntuple.
-    constexpr size_t samplePoints = 512;
+    constexpr size_t samplePoints = 1024;
     constexpr G4double bufferTime = 1.0;
-    constexpr G4double cutCoefficient = 5.0;
-    constexpr G4double timeWindow = 0.25;   // SiPM single photoelectric response time window.
+    constexpr G4double cutCoefficient = 6.0;
+    constexpr G4double timeWindow = 5.0;   // SiPM single photoelectric response time window.
     G4double startTime, endTime;
     if (emptyUpperHC) {
         startTime = std::max(0.0, lowerFirstHitTime - bufferTime);
@@ -144,65 +163,80 @@ void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     }
     G4double timeStep = (endTime - startTime) / (samplePoints - 1);
 
-    size_t upperHCStartIndex = 0;
-    size_t upperHCEndIndex = 0;
-    size_t lowerHCStartIndex = 0;
-    size_t lowerHCEndIndex = 0;
+    auto upperStartHit = upperSiPMPhotonHitVec.begin();
+    auto upperEndHit = upperSiPMPhotonHitVec.begin();;
+    auto lowerStartHit = lowerSiPMPhotonHitVec.begin();
+    auto lowerEndHit = lowerSiPMPhotonHitVec.begin();;
+
     G4double currentTime = startTime;
+
+    std::stringstream ss;
+    std::string prCSVName;
+    ss << gSiPMResultCSVDestDir << "/pr" << localHitEventCount << ".csv";
+    ss >> prCSVName;
+    std::ofstream prcsvout(prCSVName);
+
+    if (!prcsvout.is_open()) {
+        G4ExceptionDescription eout;
+        eout << "Cannot open " + prCSVName << G4endl;
+        G4Exception(
+            "sbSiPMSD::FillNtuple()",
+            "CannotOpenCSVFile",
+            FatalException,
+            eout
+        );
+        // Aborted.
+    }
+
+    // write csv column title
+    prcsvout << "time(ns),UpperSiPMPhotoelectricResponse,LowerSiPMPhotoelectricResponse" << G4endl;
+
     for (size_t i = 0; i < samplePoints; ++i) {
+        // write time stamp.
         fAnalysisManager->FillNtupleDColumn(SiPMPhotoelectricResponseNtupleID, 0, currentTime);
+        prcsvout << currentTime;
 
         G4double windowBeginTime = std::max(startTime, currentTime - timeWindow);
 
         if (!emptyUpperHC) {
-            while (static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->
-                GetHit(upperHCStartIndex))->GetTime() / ns < windowBeginTime) {
-                if (upperHCStartIndex == fSiPMPhotonHC.first->entries()) {
-                    break;
-                }
-                ++upperHCStartIndex;
+            while (upperStartHit != upperSiPMPhotonHitVec.end()) {
+                if (upperStartHit->GetTime() / ns > windowBeginTime) { break; }
+                ++upperStartHit;
             }
-            while (static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->
-                GetHit(upperHCEndIndex))->GetTime() / ns < currentTime) {
-                if (upperHCEndIndex == fSiPMPhotonHC.first->entries()) {
-                    break;
-                }
-                ++upperHCEndIndex;
+            while (upperEndHit != upperSiPMPhotonHitVec.end()) {
+                if (upperEndHit->GetTime() / ns > currentTime) { break; }
+                ++upperEndHit;
             }
             G4double upperPhotoelectricResponse = 0.0;
-            for (size_t j = upperHCStartIndex; j < upperHCEndIndex; ++j) {
-                upperPhotoelectricResponse += SiPMSinglePhotoelectricResponse(
-                    currentTime - static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(j))->GetTime() / ns
-                );
+            for (auto hit = upperStartHit; hit != upperEndHit; ++hit) {
+                upperPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - hit->GetTime() / ns);
             }
+            // write upper SiPM photoelectric response.
             fAnalysisManager->FillNtupleDColumn(SiPMPhotoelectricResponseNtupleID, 1, upperPhotoelectricResponse);
+            prcsvout << ',' << upperPhotoelectricResponse;
         }
 
         if (!emptyLowerHC) {
-            while (static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->
-                GetHit(lowerHCStartIndex))->GetTime() / ns < windowBeginTime) {
-                if (lowerHCStartIndex == fSiPMPhotonHC.second->entries()) {
-                    break;
-                }
-                ++lowerHCStartIndex;
+            while (lowerStartHit != lowerSiPMPhotonHitVec.end()) {
+                if (lowerStartHit->GetTime() / ns > windowBeginTime) { break; }
+                ++lowerStartHit;
             }
-            while (static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->
-                GetHit(lowerHCEndIndex))->GetTime() / ns < currentTime) {
-                if (lowerHCEndIndex == fSiPMPhotonHC.second->entries()) {
-                    break;
-                }
-                ++lowerHCEndIndex;
+            while (lowerEndHit != lowerSiPMPhotonHitVec.end()) {
+                if (lowerEndHit->GetTime() / ns > currentTime) { break; }
+                ++lowerEndHit;
             }
             G4double lowerPhotoelectricResponse = 0.0;
-            for (size_t j = lowerHCStartIndex; j < lowerHCEndIndex; ++j) {
-                lowerPhotoelectricResponse += SiPMSinglePhotoelectricResponse(
-                    currentTime - static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(j))->GetTime() / ns
-                );
+            for (auto hit = lowerStartHit; hit != lowerEndHit; ++hit) {
+                lowerPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - hit->GetTime() / ns);
             }
+            // write lower SiPM photoelectric response.
             fAnalysisManager->FillNtupleDColumn(SiPMPhotoelectricResponseNtupleID, 2, lowerPhotoelectricResponse);
+            prcsvout << ',' << lowerPhotoelectricResponse;
         }
-
+        // Add a new row.
         fAnalysisManager->AddNtupleRow(SiPMPhotoelectricResponseNtupleID);
+        prcsvout << G4endl;
+
         currentTime += timeStep;
     }
 

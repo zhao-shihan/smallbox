@@ -13,7 +13,6 @@ class sbSiPMHit : public G4VHit {
 private:
     G4double      fTime;
     G4double      fEnergy;
-    G4ThreeVector fPosition;
 
 public:
     static enum sbSiPMSet {
@@ -32,11 +31,12 @@ public:
 
     const G4double& GetTime() const { return fTime; }
     const G4double& GetEnergy() const { return fEnergy; }
-    const G4ThreeVector& GetPosition() const { return fPosition; }
 
     void SetTime(const G4double& time) { fTime = time; }
     void SetEnergy(const G4double& energy) { fEnergy = energy; }
-    void SetPostion(const G4ThreeVector& position) { fPosition = position; }
+
+    G4bool operator>(const sbSiPMHit& rhs) const { return this->fTime > rhs.fTime; }
+    G4bool operator<(const sbSiPMHit& rhs) const { return this->fTime < rhs.fTime; }
 };
 
 typedef G4THitsCollection<sbSiPMHit> sbSiPMHitsCollection;

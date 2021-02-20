@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
         gRunningInBatch = false;
     } else {
         gRunningInBatch = true;
+        G4cout << "mkdir returns " << system(("mkdir " + gSiPMResultCSVDestDir).c_str()) << G4endl;
     }
 
     // Random engine seed.

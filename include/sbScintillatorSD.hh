@@ -10,7 +10,7 @@
 class sbScintillatorSD : public G4VSensitiveDetector {
 private:
     sbScintillatorHitsCollection* fMuonHitsCollection;
-    
+
     G4ToolsAnalysisManager* fAnalysisManager;
 
 public:
@@ -20,6 +20,9 @@ public:
     virtual void Initialize(G4HCofThisEvent* eventHitCollection);
     virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory*);
     virtual void EndOfEvent(G4HCofThisEvent*);
+
+private:
+    void FillHistrogram() const;
 };
 
 #endif
