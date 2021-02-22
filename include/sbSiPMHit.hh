@@ -34,9 +34,6 @@ public:
 
     void SetTime(const G4double& time) { fTime = time; }
     void SetEnergy(const G4double& energy) { fEnergy = energy; }
-
-    G4bool operator>(const sbSiPMHit& rhs) const { return this->fTime > rhs.fTime; }
-    G4bool operator<(const sbSiPMHit& rhs) const { return this->fTime < rhs.fTime; }
 };
 
 typedef G4THitsCollection<sbSiPMHit> sbSiPMHitsCollection;

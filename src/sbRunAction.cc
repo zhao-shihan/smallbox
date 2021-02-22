@@ -48,7 +48,11 @@ void sbRunAction::EndOfRunAction(const G4Run*) {
     }
 }
 
-void sbRunAction::CreateTreeAndHistrogram(G4int numberOfEvent) const {
+void sbRunAction::CreateTreeAndHistrogram(G4int
+#if SB_PROCESS_SIPM_HIT
+    numberOfEvent
+#endif
+) const {
 #if SB_PROCESS_SCINTILLATOR_HIT
     fAnalysisManager->CreateH1("UpperScintillatorMuonEnergy", "MuonEnergy", 100, 0, 105 * GeV, "GeV");
     fAnalysisManager->CreateH1("LowerScintillatorMuonEnergy", "MuonEnergy", 100, 0, 105 * GeV, "GeV");

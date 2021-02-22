@@ -12,4 +12,4 @@
 /event/verbose 0
 /tracking/verbose 0
 
-/run/beamOn 1000
+/run/beamOn 100000

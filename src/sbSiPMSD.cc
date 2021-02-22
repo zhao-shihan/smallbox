@@ -104,29 +104,29 @@ void sbSiPMSD::FillNtuple() const {
     G4cout << "sbSiPMSD::FillNtuple is processing "
         << fHitEventCount << "-th SiPM activated event ... ";
 
-    std::vector<sbSiPMHit> upperSiPMPhotonHitVec(fSiPMPhotonHC.first->entries());
+    std::vector<sbSiPMHit*> upperSiPMPhotonHitVec(fSiPMPhotonHC.first->entries());
     for (size_t i = 0; i < upperSiPMPhotonHitVec.size(); ++i) {
-        upperSiPMPhotonHitVec[i] = *static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(i));
+        upperSiPMPhotonHitVec[i] = static_cast<sbSiPMHit*>(fSiPMPhotonHC.first->GetHit(i));
     }
-    std::sort(upperSiPMPhotonHitVec.begin(), upperSiPMPhotonHitVec.end());
+    std::sort(upperSiPMPhotonHitVec.begin(), upperSiPMPhotonHitVec.end(), compareHit);
 
-    std::vector<sbSiPMHit> lowerSiPMPhotonHitVec(fSiPMPhotonHC.second->entries());
+    std::vector<sbSiPMHit*> lowerSiPMPhotonHitVec(fSiPMPhotonHC.second->entries());
     for (size_t i = 0; i < lowerSiPMPhotonHitVec.size(); ++i) {
-        lowerSiPMPhotonHitVec[i] = *static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(i));
+        lowerSiPMPhotonHitVec[i] = static_cast<sbSiPMHit*>(fSiPMPhotonHC.second->GetHit(i));
     }
-    std::sort(lowerSiPMPhotonHitVec.begin(), lowerSiPMPhotonHitVec.end());
+    std::sort(lowerSiPMPhotonHitVec.begin(), lowerSiPMPhotonHitVec.end(), compareHit);
 
     G4double upperFirstHitTime = 0.0;
     G4double upperHitTimeAvg = 0.0;
     if (!emptyUpperHC) {
-        upperFirstHitTime = upperSiPMPhotonHitVec[0].GetTime() / ns;
+        upperFirstHitTime = upperSiPMPhotonHitVec[0]->GetTime() / ns;
         // Fill upper hit ntuple, need units.
         // time in ns, energy in eV.
         for (const auto& hit : upperSiPMPhotonHitVec) {
-            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 0, hit.GetTime() / ns);
-            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 1, hit.GetEnergy() / eV);
+            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 0, hit->GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(upperSiPMHitNtupleID, 1, hit->GetEnergy() / eV);
             fAnalysisManager->AddNtupleRow(upperSiPMHitNtupleID);
-            upperHitTimeAvg += hit.GetTime();
+            upperHitTimeAvg += hit->GetTime();
         }
         upperHitTimeAvg /= ns * fSiPMPhotonHC.first->entries();
     }
@@ -134,13 +134,13 @@ void sbSiPMSD::FillNtuple() const {
     G4double lowerFirstHitTime = 0.0;
     G4double lowerHitTimeAvg = 0.0;
     if (!emptyLowerHC) {
-        lowerFirstHitTime = lowerSiPMPhotonHitVec[0].GetTime() / ns;
+        lowerFirstHitTime = lowerSiPMPhotonHitVec[0]->GetTime() / ns;
         // Fill lower hit ntuple.
         for (const auto& hit : lowerSiPMPhotonHitVec) {
-            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 0, hit.GetTime() / ns);
-            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 1, hit.GetEnergy() / eV);
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 0, hit->GetTime() / ns);
+            fAnalysisManager->FillNtupleDColumn(lowerSiPMHitNtupleID, 1, hit->GetEnergy() / eV);
             fAnalysisManager->AddNtupleRow(lowerSiPMHitNtupleID);
-            lowerHitTimeAvg += hit.GetTime();
+            lowerHitTimeAvg += hit->GetTime();
         }
         lowerHitTimeAvg /= ns * fSiPMPhotonHC.second->entries();
     }
@@ -200,16 +200,16 @@ void sbSiPMSD::FillNtuple() const {
 
         if (!emptyUpperHC) {
             while (upperStartHit != upperSiPMPhotonHitVec.end()) {
-                if (upperStartHit->GetTime() / ns > windowBeginTime) { break; }
+                if ((*upperStartHit)->GetTime() / ns > windowBeginTime) { break; }
                 ++upperStartHit;
             }
             while (upperEndHit != upperSiPMPhotonHitVec.end()) {
-                if (upperEndHit->GetTime() / ns > currentTime) { break; }
+                if ((*upperEndHit)->GetTime() / ns > currentTime) { break; }
                 ++upperEndHit;
             }
             G4double upperPhotoelectricResponse = 0.0;
             for (auto hit = upperStartHit; hit != upperEndHit; ++hit) {
-                upperPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - hit->GetTime() / ns);
+                upperPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - (*hit)->GetTime() / ns);
             }
             // write upper SiPM photoelectric response.
             fAnalysisManager->FillNtupleDColumn(SiPMPhotoelectricResponseNtupleID, 1, upperPhotoelectricResponse);
@@ -218,16 +218,16 @@ void sbSiPMSD::FillNtuple() const {
 
         if (!emptyLowerHC) {
             while (lowerStartHit != lowerSiPMPhotonHitVec.end()) {
-                if (lowerStartHit->GetTime() / ns > windowBeginTime) { break; }
+                if ((*lowerStartHit)->GetTime() / ns > windowBeginTime) { break; }
                 ++lowerStartHit;
             }
             while (lowerEndHit != lowerSiPMPhotonHitVec.end()) {
-                if (lowerEndHit->GetTime() / ns > currentTime) { break; }
+                if ((*lowerEndHit)->GetTime() / ns > currentTime) { break; }
                 ++lowerEndHit;
             }
             G4double lowerPhotoelectricResponse = 0.0;
             for (auto hit = lowerStartHit; hit != lowerEndHit; ++hit) {
-                lowerPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - hit->GetTime() / ns);
+                lowerPhotoelectricResponse += SiPMSinglePhotoelectricResponse(currentTime - (*hit)->GetTime() / ns);
             }
             // write lower SiPM photoelectric response.
             fAnalysisManager->FillNtupleDColumn(SiPMPhotoelectricResponseNtupleID, 2, lowerPhotoelectricResponse);

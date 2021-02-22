@@ -10,7 +10,7 @@
 //
 // Enable optical physics. (Scintillation process, reflection, etc.)
 // If only care about hit, this can be disabled.
-#define SB_ENABLE_OPTICAL_PHYSICS                true
+#define SB_ENABLE_OPTICAL_PHYSICS                false
 //
 // Enable reflection on aluminum foil's surface.
 #define SB_ENABLE_AL_FOIL_REFLECTION             true
@@ -20,7 +20,7 @@
 #define SB_KILL_SCINTILLATION_PHOTON             false
 //
 // Process and save SiPM optical photon hit if enabled.
-#define SB_PROCESS_SIPM_HIT                      true
+#define SB_PROCESS_SIPM_HIT                      false
 //
 // Process and save scintillator muon hit if enabled.
 #define SB_PROCESS_SCINTILLATOR_HIT              true

@@ -30,10 +30,12 @@ public:
 private:
     inline G4double SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const;
     void FillNtuple() const;
+
+    inline static bool compareHit(sbSiPMHit* lhs, sbSiPMHit* rhs) { return lhs->GetTime() < rhs->GetTime(); }
 };
 
 inline G4double sbSiPMSD::SiPMSinglePhotoelectricResponse(const G4double& elapsedTimeAfterHit) const {
-    return /* exp(-elapsedTimeAfterHit) */1.0;
+    return exp(-elapsedTimeAfterHit);
 }
 
 #endif
