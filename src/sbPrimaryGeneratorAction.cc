@@ -27,12 +27,9 @@ void sbPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent) {
     } else {
         fpParticleGun->SetParticleDefinition(G4MuonPlus::Definition());
     }
-    
-    auto posAndDir = MuonPositionAndDirection();
-    fpParticleGun->SetParticlePosition(posAndDir.first);
-    fpParticleGun->SetParticleMomentumDirection(posAndDir.second);
-    
-    fpParticleGun->SetParticleEnergy(CosmicMuonEnergySpectrum());
+
+    SetMuonEnergy();
+    SetMuonPositionAndDirection();
 
     fpParticleGun->GeneratePrimaryVertex(anEvent);
 }

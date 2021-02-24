@@ -54,10 +54,13 @@ void sbRunAction::CreateTreeAndHistrogram(G4int
 #endif
 ) const {
 #if SB_PROCESS_SCINTILLATOR_HIT
-    fAnalysisManager->CreateH1("UpperScintillatorMuonEnergy", "MuonEnergy", 100, 0, 105 * GeV, "GeV");
-    fAnalysisManager->CreateH1("LowerScintillatorMuonEnergy", "MuonEnergy", 100, 0, 105 * GeV, "GeV");
-    fAnalysisManager->CreateH1("UpperScintillatorMuonZenith", "MuonZenithAngle", 100, 0, M_PI_2, "rad");
-    fAnalysisManager->CreateH1("LowerScintillatorMuonZenith", "MuonZenithAngle", 100, 0, M_PI_2, "rad");
+#define SB_ENERGY_RANGE_AND_UNIT 100, 0*GeV, 10*GeV, "GeV"
+    fAnalysisManager->CreateH1("UpperMuonEnergy", "MuonEnergy", SB_ENERGY_RANGE_AND_UNIT);
+    fAnalysisManager->CreateH1("LowerMuonEnergy", "MuonEnergy", SB_ENERGY_RANGE_AND_UNIT);
+    fAnalysisManager->CreateH1("UpperMuonPlus", "MuonPlus", SB_ENERGY_RANGE_AND_UNIT);
+    fAnalysisManager->CreateH1("LowerMuonPlus", "MuonPlus", SB_ENERGY_RANGE_AND_UNIT);
+    fAnalysisManager->CreateH1("UpperMuonMinus", "MuonMinus", SB_ENERGY_RANGE_AND_UNIT);
+    fAnalysisManager->CreateH1("LowerMuonMinus", "MuonMinus", SB_ENERGY_RANGE_AND_UNIT);
 #endif
 #if SB_PROCESS_SIPM_HIT
     sbSiPMSD::fHitEventCount = -1;

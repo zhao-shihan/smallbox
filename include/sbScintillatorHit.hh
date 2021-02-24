@@ -6,17 +6,19 @@
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
 #include "G4VPhysicalVolume.hh"
+#include "G4ParticleDefinition.hh"
 
 #include "sbGlobal.hh"
 
 class sbScintillatorHit : public G4VHit {
 private:
-    G4int         fScintillatorID;
-    G4double      fTime;
-    G4ThreeVector fPosition;
-    G4ThreeVector fMomentumDirection;
-    G4double      fKineticEnergy;
-    G4double      fEnergyDeposition;
+    G4int                       fScintillatorID;
+    G4double                    fTime;
+    G4ThreeVector               fPosition;
+    G4ThreeVector               fMomentumDirection;
+    G4double                    fKineticEnergy;
+    G4double                    fEnergyDeposition;
+    const G4ParticleDefinition* fParticleDefinition;
 
 public:
     static enum sbScintillatorSet {
@@ -41,6 +43,7 @@ public:
     const G4ThreeVector& GetMomentumDirection() const { return fMomentumDirection; }
     const G4double& GetKineticEnergy() const { return fKineticEnergy; }
     const G4double& GetEnergyDeposition() const { return fEnergyDeposition; }
+    const G4ParticleDefinition* GetParticleDefinition() const { return fParticleDefinition; }
 
     void SetScintillatorID(const G4int& scintillatorID) { fScintillatorID = scintillatorID; }
     void SetTime(const G4double& time) { fTime = time; }
@@ -48,6 +51,9 @@ public:
     void SetMomentumDirection(const G4ThreeVector& position) { fPosition = position; }
     void SetKineticEnergy(const G4double& kineticEnergy) { fKineticEnergy = kineticEnergy; }
     void SetEnergyDeposition(const G4double& energyDeposition) { fEnergyDeposition = energyDeposition; }
+    void SetParticleDefinition(const G4ParticleDefinition* particleDefinition) {
+        fParticleDefinition = particleDefinition;
+    }
 };
 
 typedef G4THitsCollection<sbScintillatorHit> sbScintillatorHitsCollection;

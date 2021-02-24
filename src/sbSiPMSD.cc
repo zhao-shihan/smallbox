@@ -95,14 +95,14 @@ void sbSiPMSD::FillNtuple() const {
     G4int localHitEventCount = fHitEventCount;
     mtx.unlock();
 
+    G4cout << "sbSiPMSD::FillNtuple is processing "
+        << fHitEventCount << "-th SiPM activated event ... ";
+
     constexpr G4int numOfNtuples = 3;
     G4int localCurrentFirstNtupleID = numOfNtuples * fHitEventCount;
     G4int upperSiPMHitNtupleID = localCurrentFirstNtupleID;
     G4int lowerSiPMHitNtupleID = upperSiPMHitNtupleID + 1;
     G4int SiPMPhotoelectricResponseNtupleID = lowerSiPMHitNtupleID + 1;
-
-    G4cout << "sbSiPMSD::FillNtuple is processing "
-        << fHitEventCount << "-th SiPM activated event ... ";
 
     std::vector<sbSiPMHit*> upperSiPMPhotonHitVec(fSiPMPhotonHC.first->entries());
     for (size_t i = 0; i < upperSiPMPhotonHitVec.size(); ++i) {

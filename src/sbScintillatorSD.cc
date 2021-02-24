@@ -38,6 +38,8 @@ G4bool sbScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     hit->SetTime(preStepPoint->GetGlobalTime());
     hit->SetKineticEnergy(preStepPoint->GetKineticEnergy());
     hit->SetMomentumDirection(preStepPoint->GetMomentumDirection());
+    hit->SetEnergyDeposition(step->GetTotalEnergyDeposit());
+    hit->SetParticleDefinition(presentParticle);
     fMuonHitsCollection->insert(hit);
     return true;
 }
@@ -64,12 +66,17 @@ void sbScintillatorSD::FillHistrogram() const {
     for (size_t i = 0; i < fMuonHitsCollection->entries(); ++i) {
         auto hit = static_cast<sbScintillatorHit*>(fMuonHitsCollection->GetHit(i));
         // Fill histrogram, no need of units.
-        if (hit->GetScintillatorID() == sbScintillatorHit::sbScintillatorSet::fUpperScintillator) {
-            fAnalysisManager->FillH1(0, hit->GetKineticEnergy());
-            fAnalysisManager->FillH1(2, M_PI - hit->GetMomentumDirection().theta());
+        G4int HistID = 0;
+        if (hit->GetScintillatorID() == sbScintillatorHit::sbScintillatorSet::fLowerScintillator) {
+            ++HistID;
+        }
+        fAnalysisManager->FillH1(HistID, hit->GetKineticEnergy());
+        HistID += 2;
+        if (hit->GetParticleDefinition() == G4MuonPlus::Definition()) {
+            fAnalysisManager->FillH1(HistID, hit->GetKineticEnergy());
         } else {
-            fAnalysisManager->FillH1(1, hit->GetKineticEnergy());
-            fAnalysisManager->FillH1(3, M_PI - hit->GetMomentumDirection().theta());
+            HistID += 2;
+            fAnalysisManager->FillH1(HistID, hit->GetKineticEnergy());
         }
     }
 }

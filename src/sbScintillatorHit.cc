@@ -10,7 +10,8 @@ sbScintillatorHit::sbScintillatorHit() :
     fPosition(0.0),
     fMomentumDirection(0.0),
     fKineticEnergy(0.0),
-    fEnergyDeposition(0.0) {}
+    fEnergyDeposition(0.0),
+    fParticleDefinition(nullptr) {}
 
 sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator) :
     G4VHit(),
@@ -18,7 +19,8 @@ sbScintillatorHit::sbScintillatorHit(G4VPhysicalVolume* physicalScintillator) :
     fPosition(0.0),
     fMomentumDirection(0.0),
     fKineticEnergy(0.0),
-    fEnergyDeposition(0.0) {
+    fEnergyDeposition(0.0),
+    fParticleDefinition(nullptr) {
     auto sbDC = sbDetectorConstruction::GetsbDCInstance();
     if (physicalScintillator == sbDC->GetPhysicalScintillators().first) {
         fScintillatorID = fUpperScintillator;
@@ -44,7 +46,8 @@ sbScintillatorHit::sbScintillatorHit(const sbScintillatorHit& rhs) :
     fPosition(rhs.fPosition),
     fMomentumDirection(rhs.fMomentumDirection),
     fKineticEnergy(rhs.fKineticEnergy),
-    fEnergyDeposition(rhs.fEnergyDeposition) {}
+    fEnergyDeposition(rhs.fEnergyDeposition),
+    fParticleDefinition(rhs.fParticleDefinition) {}
 
 sbScintillatorHit::~sbScintillatorHit() {}
 
@@ -56,6 +59,7 @@ const sbScintillatorHit& sbScintillatorHit::operator=(const sbScintillatorHit& r
         this->fMomentumDirection = rhs.fMomentumDirection;
         this->fKineticEnergy = rhs.fKineticEnergy;
         this->fEnergyDeposition = rhs.fEnergyDeposition;
+        this->fParticleDefinition = rhs.fParticleDefinition;
     }
     return *this;
 }
