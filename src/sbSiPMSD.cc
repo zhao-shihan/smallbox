@@ -9,6 +9,7 @@
 #include "sbDetectorConstruction.hh"
 
 G4int sbSiPMSD::fHitEventCount = -1;
+std::mutex sbSiPMSD::fMutex;
 
 sbSiPMSD::sbSiPMSD(const G4String& SiPMSDName) :
     G4VSensitiveDetector(SiPMSDName),
@@ -62,8 +63,6 @@ G4bool sbSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
     return true;
 }
 
-std::mutex mtx;
-
 void sbSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     if (!fSiPMPhotonHC.first || !fSiPMPhotonHC.second) {
         G4ExceptionDescription eout;
@@ -90,10 +89,10 @@ void sbSiPMSD::FillNtuple() const {
     }
 
     // Prevent multiple threads from getting the same ntupleID.
-    mtx.lock();
+    fMutex.lock();
     ++fHitEventCount;
     G4int localHitEventCount = fHitEventCount;
-    mtx.unlock();
+    fMutex.unlock();
 
     G4cout << "sbSiPMSD::FillNtuple is processing "
         << fHitEventCount << "-th SiPM activated event ... ";

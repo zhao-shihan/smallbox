@@ -25,6 +25,7 @@ public:
     virtual G4bool ProcessHits(G4Step* step, G4TouchableHistory*);
     virtual void EndOfEvent(G4HCofThisEvent*);
 
+    static std::mutex fMutex;
     static G4int fHitEventCount;
 
 private:

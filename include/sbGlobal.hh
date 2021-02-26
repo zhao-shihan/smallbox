@@ -15,6 +15,7 @@ extern G4bool gRunningInBatch;
 //
 // Cosmic muon source
 
+constexpr G4double gMaxE_GeV = 5000;
 constexpr G4double gEffectiveRange = 0.25 * m;
 constexpr G4double gSphereRadius = 2.828427 * gEffectiveRange;
 

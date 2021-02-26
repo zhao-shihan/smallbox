@@ -25,48 +25,20 @@ class G4Sphere;
 
 class sbPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
 private:
-    G4ParticleGun* fpParticleGun;
-    std::map<std::string, G4PVDataVector> fCosmicMuonProperties;
-    G4PhysicsOrderedFreeVector fCosmicMuonZenithDistributionCDFinv;
-    G4PhysicsOrderedFreeVector fCosmicMuonEnergySpectrumCDFinv;
+    G4ParticleGun* fParticleGun;
 
 public:
     sbPrimaryGeneratorAction();
     virtual ~sbPrimaryGeneratorAction();
     virtual void GeneratePrimaries(G4Event*);
-    inline const G4ParticleGun* GetParticleGun() const { return fpParticleGun; }
+    inline const G4ParticleGun* GetParticleGun() const { return fParticleGun; }
 
 private:
-    inline void SetMuonPositionAndDirection() const;
-    inline void SetMuonEnergy() const;
+    G4double EnergySpectrum(G4double E_GeV, G4double theta) const;
+    void FindEnergyAndTheta(G4double& energy, G4double& theta) const;
+
+    void SetMuonProperties() const;
 };
 
-constexpr G4double _2_pi = 2.0 * M_PI;
-
-inline void sbPrimaryGeneratorAction::SetMuonPositionAndDirection() const {
-    auto sphereCentre = G4ThreeVector(
-        2.0 * G4UniformRand() - 1.0,
-        2.0 * G4UniformRand() - 1.0,
-        0.0
-    ) * gEffectiveRange;
-
-    G4double phi = _2_pi * G4UniformRand();
-    G4double theta = fCosmicMuonZenithDistributionCDFinv.Value(G4UniformRand());
-    G4double sinTheta = sin(theta);
-    auto relativePositionVec = G4ThreeVector(
-        sinTheta * cos(phi),
-        sinTheta * sin(phi),
-        cos(theta)
-    ) * gSphereRadius;
-
-    fpParticleGun->SetParticlePosition(relativePositionVec + sphereCentre);
-    fpParticleGun->SetParticleMomentumDirection(-relativePositionVec);
-}
-
-inline void sbPrimaryGeneratorAction::SetMuonEnergy() const {
-    fpParticleGun->SetParticleEnergy(
-        fCosmicMuonEnergySpectrumCDFinv.Value(G4UniformRand()) * GeV
-    );
-}
-
 #endif
+
