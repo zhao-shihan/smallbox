@@ -54,7 +54,7 @@ void sbRunAction::CreateTreeAndHistrogram(G4int
 #endif
 ) const {
 #if SB_PROCESS_SCINTILLATOR_HIT
-#define SB_ENERGY_RANGE_AND_UNIT 100, 0*GeV, 10*GeV, "GeV"
+#define SB_ENERGY_RANGE_AND_UNIT 200, 0*GeV, 200*GeV, "GeV"
     fAnalysisManager->CreateH1("UpperMuonEnergy", "MuonEnergy", SB_ENERGY_RANGE_AND_UNIT);
     fAnalysisManager->CreateH1("LowerMuonEnergy", "MuonEnergy", SB_ENERGY_RANGE_AND_UNIT);
     fAnalysisManager->CreateH1("UpperMuonPlus", "MuonPlus", SB_ENERGY_RANGE_AND_UNIT);

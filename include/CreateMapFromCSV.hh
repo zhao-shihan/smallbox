@@ -17,7 +17,7 @@
 // ...
 //
 // e.g.
-// # refraction property
+// #refraction property
 // RINDEX,1.1,1.2,1.3,#refraction index
 // ENERGY,1.5,1.6,1.7,#energy
 //
@@ -31,8 +31,8 @@
 // [KEY],[data1],(not-a-number),[data3],... : String that are not numbers are treated as 0.
 // A,[data1],[data2],...,[dataN1]
 // A,[data1],[data2],...,[dataN2]           : For data with the same keyword, keep the first data.
-template<typename float_type>
-std::map<std::string, std::vector<float_type>> CreateMapFromCSV(const std::string& csvFileName) {
+template<typename T>
+std::map<std::string, std::vector<T>> CreateMapFromCSV(const std::string& csvFileName) {
     using std::map;
     using std::string;
     using std::vector;
@@ -48,10 +48,10 @@ std::map<std::string, std::vector<float_type>> CreateMapFromCSV(const std::strin
             JustWarning,
             exceptout
         );
-        return map<string, vector<float_type>>();
+        return map<string, vector<T>>();
     }
 
-    map<string, vector<float_type>> data;
+    map<string, vector<T>> data;
 
     string line;
     while (!fin.eof()) {
@@ -76,13 +76,13 @@ std::map<std::string, std::vector<float_type>> CreateMapFromCSV(const std::strin
         }
         string keyString(line.substr(0, nextCommaPos));  // The key.
 
-        vector<float_type> propertyVector;
+        vector<T> propertyVector;
         size_t lastCommaPos;
         do {
             lastCommaPos = nextCommaPos;
             nextCommaPos = line.find(',', lastCommaPos + 1);
-            std::istringstream strin(line.substr(lastCommaPos + 1, nextCommaPos));
-            float_type property;
+            std::istringstream strin(line.substr(lastCommaPos + 1, nextCommaPos - lastCommaPos - 1));
+            T property;
             strin >> property;
             propertyVector.push_back(property);
         } while (nextCommaPos != string::npos);
