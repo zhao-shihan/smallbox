@@ -1,10 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (smallbox)
 
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-SET(CMAKE_BUILD_TYPE "Release")
-
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default
 # You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
@@ -12,9 +8,9 @@ SET(CMAKE_BUILD_TYPE "Release")
 #
 option(WITH_GEANT4_UIVIS "Build with Geant4 UI and Vis drivers" ON)
 if(WITH_GEANT4_UIVIS)
-  find_package(Geant4 REQUIRED ui_all vis_all)
+    find_package(Geant4 REQUIRED ui_all vis_all)
 else()
-  find_package(Geant4 REQUIRED)
+    find_package(Geant4 REQUIRED)
 endif()
 
 #----------------------------------------------------------------------------
@@ -35,26 +31,25 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(smallbox smallbox.cc ${sources} ${headers})
-target_link_libraries(smallbox ${Geant4_LIBRARIES})
+add_executable(SB SB.cc ${sources} ${headers})
+target_link_libraries(SB ${Geant4_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
-# build smallbox. This is so that we can run the executable directly because it
+# build MachineLearningBox. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
 set(SCRIPTS
-  ./macros/init_vis.mac
-  ./macros/run.mac
-  ./macros/vis.mac
-  ./datafiles/cosmicMuonProperties.csv
-  ./datafiles/scintillatorProperties.csv
-  )
+    ./macros/init_vis.mac
+    ./macros/vis.mac
+    ./datafiles/scintillator_properties.csv
+    ./datafiles/example.csv
+)
 
 foreach(_script ${SCRIPTS})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
+    configure_file(
+        ${PROJECT_SOURCE_DIR}/${_script}
+        ${PROJECT_BINARY_DIR}/${_script}
     COPYONLY
     )
 endforeach()
@@ -62,4 +57,7 @@ endforeach()
 #----------------------------------------------------------------------------
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
-install(TARGETS smallbox DESTINATION bin)
+install(TARGETS 
+    SB
+DESTINATION bin)
+
