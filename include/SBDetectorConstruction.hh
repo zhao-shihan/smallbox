@@ -14,38 +14,49 @@
 class SBDetectorConstruction : public G4VUserDetectorConstruction {
 public:
 
+    // World
+
+    const G4String fWorldName;
+
     // Scintillator
 
     const G4double fScintillatorHalfSize[3];
     const G4String fScintillatorName;
 
-    // World
+    // Acrylic light guide
 
-    const G4String fWorldName;
+    const G4double fAcrylicLightGuideSiPMSideHalfSize[2];
+    const G4double fAcrylicLightGuideLength;
+    const G4String fAcrylicName;
 
-    // Aluminum foil & gap
+    // Gap between acrylic and scintillator
+
+    const G4double fAcrylicScintillatorGap;
+    const G4String fAcrylicScintillatorGapName;
+
+    // Gap between cover and scintillator
+
+    const G4double fCoverScintillatorGap;
+    const G4String fCoverScintillatorGapName;
+
+    // Aluminum foil cover
 
     const G4double fCoverThickness;
     const G4double fCoverHoleHalfWidth;
-    const G4double fGapWidth;
     const G4String fCoverName;
-    const G4String fGapName;
 
     // SiPM
 
     const G4int fSiPMCount;
     const G4double fSiPMHalfSize[3];
-#if SB_STRUCTURE == 2
-    const std::vector<G4ThreeVector> fSiPMPositionList;
-#endif
     const G4double fSiPMScintillatorGap;
     const G4String fSiPMName;
 
-    // Light guide
+    // Silicone Oil (Gap between SiPM and acrylic)
 
-    const G4double fLightGuideHalfWidth;
-    const G4double fLightGuideThickness;
-    const G4String fLightGuideName;
+    const G4double fSiliconeOilHalfWidth;
+    const G4double fSiliconeOilThickness;
+    const G4String fSiliconeOilName;
 
     // PCB
 

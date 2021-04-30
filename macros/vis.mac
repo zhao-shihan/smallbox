@@ -22,13 +22,15 @@
 /vis/viewer/set/lineSegmentsPerCircle 100
 
 #/vis/geometry/set/visibility world 0 false
-/vis/geometry/set/colour world        0   1   1   1   0.02
-/vis/geometry/set/colour scintillator 0   0   0   1   0.2
-/vis/geometry/set/colour al_foil      0   1   1   1   0.2
-/vis/geometry/set/colour gap          0   1   1   1   0.1
-/vis/geometry/set/colour SiPM         0   0.5 0.5 1   0.99
-/vis/geometry/set/colour light_guide  0   1   1   1   0.3
-/vis/geometry/set/colour PCB          0   0   1   0   0.3
+/vis/geometry/set/colour world                    0   1   1   1   0.02
+/vis/geometry/set/colour scintillator             0   0   0   1   0.2
+/vis/geometry/set/colour arcylic                  0   1   1   1   0.1
+/vis/geometry/set/colour cover                    0   1   1   1   0.2
+/vis/geometry/set/colour cover_scintillator_gap   0   1   1   1   0.1
+/vis/geometry/set/colour arcylic_scintillator_gap 0   1   1   1   0.1
+/vis/geometry/set/colour SiPM                     0   0.5 0.5 1   0.99
+/vis/geometry/set/colour silicone_oil             0   1   1   1   0.3
+/vis/geometry/set/colour PCB                      0   0   1   0   0.3
 
 /vis/scene/add/trajectories
 /vis/modeling/trajectories/create/drawByCharge
