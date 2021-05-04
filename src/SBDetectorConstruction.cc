@@ -531,14 +531,14 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
 
     auto detector = new G4AssemblyVolume();
 
+    // place scintillator
+    detector->AddPlacedVolume(fLogicalScintillator, scintillatorTransform); ++fDetectorPartCount;
     // place SiPM
     detector->AddPlacedVolume(fLogicalSiPM, SiPMTransform); ++fDetectorPartCount;
     // place light guide
     detector->AddPlacedVolume(logicalLightGuide, lightGuideTransform); ++fDetectorPartCount;
     // place PCB
     detector->AddPlacedVolume(logicalPCB, PCBTransform); ++fDetectorPartCount;
-    // place scintillator
-    detector->AddPlacedVolume(fLogicalScintillator, scintillatorTransform); ++fDetectorPartCount;
     // place acrylic
     detector->AddPlacedVolume(logicalAcrylic, acrylicTransform); ++fDetectorPartCount;
     // place gap between acrylic and scintillator

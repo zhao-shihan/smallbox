@@ -40,15 +40,18 @@ void SBSiPMSD::Initialize(G4HCofThisEvent* hitCollectionOfThisEvent) {
 }
 
 G4bool SBSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
-    if (step->GetTrack()->GetParticleDefinition() != G4OpticalPhoton::Definition()) {
+    if ((step->GetTrack()->GetParticleDefinition() != G4OpticalPhoton::Definition()) ||
+        ((step->GetPreStepPoint()->GetPhysicalVolume()->GetCopyNo() - 2) %
+            fDetectorConstruction->GetDetectorPartCount() != 0) ||
+        !step->IsFirstStepInVolume()) {
         return false;
     }
     auto hit = new SBSiPMHit(
         step->GetPreStepPoint()->GetGlobalTime(),
         step->GetPreStepPoint()->GetTotalEnergy()
     );
-    fSiPMPhotonHCList[step->GetPreStepPoint()->GetPhysicalVolume()->GetCopyNo()
-        / fDetectorConstruction->GetDetectorPartCount()]->insert(hit);
+    fSiPMPhotonHCList[step->GetPreStepPoint()->GetPhysicalVolume()->GetCopyNo() /
+        fDetectorConstruction->GetDetectorPartCount()]->insert(hit);
     return true;
 }
 
@@ -90,12 +93,12 @@ void SBSiPMSD::EndOfEvent(G4HCofThisEvent*) {
 #if SB_SAVE_SIPM_RESPONSE_WAVEFORM
         for (const auto& aResponse : response) {
             fAnalysisManager->FillWaveForm(eventSN, SiPMID, aResponse.first, aResponse.second);
-        }
+    }
 #endif
 #if SB_SAVE_SIPM_MAX_RESPONSE
         maxResponse[SiPMID] = std::max_element(response.begin(), response.end(), this->compareResponse)->second;
 #endif
-    }
+}
 #if SB_SAVE_SIPM_MAX_RESPONSE
     fAnalysisManager->FillMaxResponse(maxResponse);
 #endif

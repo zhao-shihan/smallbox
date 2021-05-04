@@ -16,7 +16,7 @@ SBProgressMonitor::SBProgressMonitor() :
     fTotalEvents(0),
     fProcessedEventsInThisRun(0),
     fPreviousProcessedEvents(0),
-    fEventsPerReport(1),
+    fEventsPerReport(10),
     fCPUTime(0) {}
 
 void SBProgressMonitor::SetNumberOfEventsPerReport(G4int n) {

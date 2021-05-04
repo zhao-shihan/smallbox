@@ -25,11 +25,12 @@ void SBScintillatorSD::Initialize(G4HCofThisEvent* hitCollectionOfThisEvent) {
 }
 
 G4bool SBScintillatorSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
-    if (step->GetTrack()->GetParticleDefinition() != G4MuonPlus::Definition() &&
-        step->GetTrack()->GetParticleDefinition() != G4MuonMinus::Definition()) {
+    if ((step->GetTrack()->GetParticleDefinition() != G4MuonPlus::Definition() &&
+        step->GetTrack()->GetParticleDefinition() != G4MuonMinus::Definition()) ||
+        (step->GetPreStepPoint()->GetPhysicalVolume()->GetCopyNo() != 1) ||
+        !step->IsFirstStepInVolume()) {
         return false;
     }
-    if (!step->IsFirstStepInVolume()) { return false; }
     const auto& position = step->GetPreStepPoint()->GetPosition();
     const auto& momentum = step->GetPreStepPoint()->GetMomentum();
     if (momentum.z() != 0) {
