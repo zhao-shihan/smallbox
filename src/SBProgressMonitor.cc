@@ -1,5 +1,3 @@
-#include <mutex>
-
 #include "G4Run.hh"
 
 #include "SBProgressMonitor.hh"
@@ -18,7 +16,7 @@ SBProgressMonitor::SBProgressMonitor() :
     fTotalEvents(0),
     fProcessedEventsInThisRun(0),
     fPreviousProcessedEvents(0),
-    fEventsPerReport(10),
+    fEventsPerReport(1),
     fCPUTime(0) {}
 
 void SBProgressMonitor::SetNumberOfEventsPerReport(G4int n) {
@@ -45,7 +43,7 @@ void SBProgressMonitor::RunStart() {
     fTimerStarted = true;
 }
 
-std::mutex mutex_SBProgressMonitor;
+G4Mutex mutex_SBProgressMonitor;
 
 void SBProgressMonitor::EventComplete() {
     if (!fTimerStarted) { return; }
@@ -71,15 +69,18 @@ void SBProgressMonitor::EventComplete() {
 
 void SBProgressMonitor::RunComplete() {
     if (!fTimerStarted) { return; }
-    time(&fRunEndTime);
-    fCPUTime = clock() - fCPUTime;
-    fTimerStarted = false;
-    std::cout
-        << '\n'
-        << "  Start time: " << ctime(&fRunStartTime)
-        << "    End time: " << ctime(&fRunEndTime)
-        << "Elapsed time: " << difftime(fRunEndTime, fRunStartTime) << "s\n"
-        << "    CPU time: " << fCPUTime / CLOCKS_PER_SEC << 's'
-        << std::endl;
+    auto run = G4MTRunManager::GetMasterRunManager()->GetCurrentRun();
+    if (run->GetNumberOfEvent() == run->GetNumberOfEventToBeProcessed()) {
+        time(&fRunEndTime);
+        fCPUTime = clock() - fCPUTime;
+        fTimerStarted = false;
+        std::cout
+            << '\n'
+            << "  Start time: " << ctime(&fRunStartTime)
+            << "    End time: " << ctime(&fRunEndTime)
+            << "Elapsed time: " << difftime(fRunEndTime, fRunStartTime) << "s\n"
+            << "    CPU time: " << fCPUTime / CLOCKS_PER_SEC << 's'
+            << std::endl;
+    }
 }
 

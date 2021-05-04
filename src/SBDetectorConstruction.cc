@@ -3,7 +3,7 @@
 #include "G4NistManager.hh"
 #include "G4Box.hh"
 #include "G4Trd.hh"
-#include "G4TessellatedSolid.hh"
+#include "G4UnionSolid.hh"
 #include "G4QuadrangularFacet.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4LogicalSkinSurface.hh"
@@ -51,7 +51,7 @@ SBDetectorConstruction::SBDetectorConstruction() :
     fLogicalScintillator(nullptr),
     fLogicalSiPM(nullptr),
 
-    fDetectorPartCount(1) {}
+    fDetectorPartCount(0) {}
 
 SBDetectorConstruction::~SBDetectorConstruction() {}
 
@@ -128,6 +128,11 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     values = { 1.403, 1.406 };
     auto siliconeOilRefractionIndex = new G4MaterialPropertyVector(&energies.front(), &values.front(), energies.size());
 
+    // silicone oil absoption length
+    energies = { 1.587 * eV, 3.095 * eV };
+    values = { 15 * cm, 15 * cm };
+    auto siliconeOilAbsLength = new G4MaterialPropertyVector(&energies.front(), &values.front(), energies.size());
+
     // silicone oil
     // 
     auto siliconeOilMaterial = new G4Material("silicone_oil", 0.97 * g / cm3, 4, kStateLiquid);
@@ -135,9 +140,10 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     siliconeOilMaterial->AddElement(H, 6);
     siliconeOilMaterial->AddElement(Si, 1);
     siliconeOilMaterial->AddElement(O, 1);
-    auto lightGuidePropertiesTable = new G4MaterialPropertiesTable();
-    lightGuidePropertiesTable->AddProperty("RINDEX", siliconeOilRefractionIndex);
-    siliconeOilMaterial->SetMaterialPropertiesTable(lightGuidePropertiesTable);
+    auto siliconeOilPropertiesTable = new G4MaterialPropertiesTable();
+    siliconeOilPropertiesTable->AddProperty("RINDEX", siliconeOilRefractionIndex);
+    siliconeOilPropertiesTable->AddProperty("ABSLENGTH", siliconeOilAbsLength);
+    siliconeOilMaterial->SetMaterialPropertiesTable(siliconeOilPropertiesTable);
 
     // ============================================================================
     // gap between cover and scintillator material
@@ -148,11 +154,17 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     values = { 1.36, 1.36 };
     auto gapRefractionIndex = new G4MaterialPropertyVector(&energies.front(), &values.front(), energies.size());
 
+    // gap absoption length
+    energies = { 1.587 * eV, 3.095 * eV };
+    values = { 15 * cm, 15 * cm };
+    auto gapAbsLength = new G4MaterialPropertyVector(&energies.front(), &values.front(), energies.size());
+
     // gap material: glue
     //
     auto gapMaterial = nist->FindOrBuildMaterial("G4_WATER");
     auto gapPropertiesTable = new G4MaterialPropertiesTable();
     gapPropertiesTable->AddProperty("RINDEX", gapRefractionIndex);
+    gapPropertiesTable->AddProperty("ABSLENGTH", gapAbsLength);
     gapMaterial->SetMaterialPropertiesTable(gapPropertiesTable);
 
     // ============================================================================
@@ -306,382 +318,103 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     // gap between cover and scintillator
     // ============================================================================
 
-    auto CoverGenerator = [this](const double& start, const G4double& end)->std::array<G4QuadrangularFacet*, 30> {
-        std::array<G4ThreeVector, 32> points = {
-            // 1
-            G4ThreeVector(
-                fAcrylicLightGuideSiPMSideHalfSize[0] + end,
-                fAcrylicLightGuideSiPMSideHalfSize[1] + end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
+    auto solidRod = new G4Box(
+        fTempName,
+        fCoverHoleHalfWidth,
+        fCoverHoleHalfWidth,
+        fScintillatorHalfSize[2] + fAcrylicLightGuideLength
+    );
+    auto GenerateCover = [this, solidRod](G4double in, G4double out)->std::pair<G4VSolid*, G4Transform3D> {
+        auto solidPart1 = new G4SubtractionSolid(
+            fTempName,
+            new G4Box(
+                fTempName,
+                fScintillatorHalfSize[0] + out,
+                fScintillatorHalfSize[1] + out,
+                fScintillatorHalfSize[2] + 0.5 * out + 0.5 * fAcrylicScintillatorGap
             ),
-            G4ThreeVector(
-                -fAcrylicLightGuideSiPMSideHalfSize[0] - end,
-                fAcrylicLightGuideSiPMSideHalfSize[1] + end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
+            new G4Box(
+                fTempName,
+                fScintillatorHalfSize[0] + in,
+                fScintillatorHalfSize[1] + in,
+                fScintillatorHalfSize[2] + 0.5 * out + 0.5 * fAcrylicScintillatorGap
             ),
-            G4ThreeVector(
-                -fAcrylicLightGuideSiPMSideHalfSize[0] - end,
-                -fAcrylicLightGuideSiPMSideHalfSize[1] - end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            G4ThreeVector(
-                fAcrylicLightGuideSiPMSideHalfSize[0] + end,
-                -fAcrylicLightGuideSiPMSideHalfSize[1] - end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            //1hole
-            G4ThreeVector(
-                fCoverHoleHalfWidth,
-                fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            G4ThreeVector(
-                -fCoverHoleHalfWidth,
-                fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            G4ThreeVector(
-                -fCoverHoleHalfWidth,
-                -fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            G4ThreeVector(
-                fCoverHoleHalfWidth,
-                -fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + end
-            ),
-            //2
-            G4ThreeVector(
-                fAcrylicLightGuideSiPMSideHalfSize[0] + start,
-                fAcrylicLightGuideSiPMSideHalfSize[1] + start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                -fAcrylicLightGuideSiPMSideHalfSize[0] - start,
-                fAcrylicLightGuideSiPMSideHalfSize[1] + start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                -fAcrylicLightGuideSiPMSideHalfSize[0] - start,
-                -fAcrylicLightGuideSiPMSideHalfSize[1] - start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                fAcrylicLightGuideSiPMSideHalfSize[0] + start,
-                -fAcrylicLightGuideSiPMSideHalfSize[1] - start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            //2hole
-            G4ThreeVector(
-                fCoverHoleHalfWidth,
-                fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                -fCoverHoleHalfWidth,
-                fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                -fCoverHoleHalfWidth,
-                -fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            G4ThreeVector(
-                fCoverHoleHalfWidth,
-                -fCoverHoleHalfWidth,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + fAcrylicLightGuideLength + start
-            ),
-            //3
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + end,
-                fScintillatorHalfSize[1] + end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + end
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - end,
-                fScintillatorHalfSize[1] + end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + end
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - end,
-                -fScintillatorHalfSize[1] - end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + end
-            ),
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + end,
-                -fScintillatorHalfSize[1] - end,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + end
-            ),
-            //4
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + start,
-                fScintillatorHalfSize[1] + start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + start
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - start,
-                fScintillatorHalfSize[1] + start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + start
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - start,
-                -fScintillatorHalfSize[1] - start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + start
-            ),
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + start,
-                -fScintillatorHalfSize[1] - start,
-                fScintillatorHalfSize[2] + fAcrylicScintillatorGap + start
-            ),
-            //5
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + start,
-                fScintillatorHalfSize[1] + start,
-                -fScintillatorHalfSize[2] - start
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - start,
-                fScintillatorHalfSize[1] + start,
-                -fScintillatorHalfSize[2] - start
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - start,
-                -fScintillatorHalfSize[1] - start,
-                -fScintillatorHalfSize[2] - start
-            ),
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + start,
-                -fScintillatorHalfSize[1] - start,
-                -fScintillatorHalfSize[2] - start
-            ),
-            //6
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + end,
-                fScintillatorHalfSize[1] + end,
-                -fScintillatorHalfSize[2] - end
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - end,
-                fScintillatorHalfSize[1] + end,
-                -fScintillatorHalfSize[2] - end
-            ),
-            G4ThreeVector(
-                -fScintillatorHalfSize[0] - end,
-                -fScintillatorHalfSize[1] - end,
-                -fScintillatorHalfSize[2] - end
-            ),
-            G4ThreeVector(
-                fScintillatorHalfSize[0] + end,
-                -fScintillatorHalfSize[1] - end,
-                -fScintillatorHalfSize[2] - end
+            G4Transform3D(
+                G4RotationMatrix(),
+                G4ThreeVector(0.0, 0.0, out - in)
             )
-        };
-        std::array<G4QuadrangularFacet*, 30> facets = {
-            //out
-            new G4QuadrangularFacet(
-                std::get<4>(points),
-                std::get<7>(points),
-                std::get<3>(points),
-                std::get<0>(points), ABSOLUTE
+        );
+        constexpr G4double ex = 1 * mm;
+        auto solidPart2 = new G4SubtractionSolid(
+            fTempName,
+            new G4SubtractionSolid(
+                fTempName,
+                new G4Trd(
+                    fTempName,
+                    fScintillatorHalfSize[0] + out,
+                    fAcrylicLightGuideSiPMSideHalfSize[0] + out -
+                    (out / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[0] - fAcrylicLightGuideSiPMSideHalfSize[0]),
+                    fScintillatorHalfSize[1] + out,
+                    fAcrylicLightGuideSiPMSideHalfSize[1] + out -
+                    (out / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[1] - fAcrylicLightGuideSiPMSideHalfSize[1]),
+                    0.5 * (fAcrylicLightGuideLength + out)
+                ),
+                new G4Trd(
+                    fTempName,
+                    fScintillatorHalfSize[0] + in +
+                    (ex / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[0] - fAcrylicLightGuideSiPMSideHalfSize[0]),
+                    fAcrylicLightGuideSiPMSideHalfSize[0] + in -
+                    (in / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[0] - fAcrylicLightGuideSiPMSideHalfSize[0]),
+                    fScintillatorHalfSize[1] + in +
+                    (ex / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[0] - fAcrylicLightGuideSiPMSideHalfSize[0]),
+                    fAcrylicLightGuideSiPMSideHalfSize[1] + in -
+                    (in / fAcrylicLightGuideLength)
+                    * (fScintillatorHalfSize[1] - fAcrylicLightGuideSiPMSideHalfSize[1]),
+                    0.5 * (ex + fAcrylicLightGuideLength + in)
+                ),
+                G4Transform3D(
+                    G4RotationMatrix(),
+                    G4ThreeVector(0.0, 0.0, 0.5 * (in - ex - out))
+                )
             ),
-            new G4QuadrangularFacet(
-                std::get<5>(points),
-                std::get<4>(points),
-                std::get<0>(points),
-                std::get<1>(points), ABSOLUTE
+            solidRod
+        );
+        G4Transform3D part2Transform(
+            G4RotationMatrix(),
+            G4ThreeVector(0.0, 0.0,
+                fScintillatorHalfSize[2] + 0.5 * out + 0.5 * fAcrylicScintillatorGap +
+                0.5 * (fAcrylicLightGuideLength + out))
+        );
+
+        return std::make_pair(
+            new G4UnionSolid(
+                fTempName,
+                solidPart1,
+                solidPart2,
+                part2Transform
             ),
-            new G4QuadrangularFacet(
-                std::get<6>(points),
-                std::get<5>(points),
-                std::get<1>(points),
-                std::get<2>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<7>(points),
-                std::get<6>(points),
-                std::get<2>(points),
-                std::get<3>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<0>(points),
-                std::get<3>(points),
-                std::get<19>(points),
-                std::get<16>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<1>(points),
-                std::get<0>(points),
-                std::get<16>(points),
-                std::get<17>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<2>(points),
-                std::get<1>(points),
-                std::get<17>(points),
-                std::get<18>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<3>(points),
-                std::get<2>(points),
-                std::get<18>(points),
-                std::get<19>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<16>(points),
-                std::get<19>(points),
-                std::get<31>(points),
-                std::get<28>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<17>(points),
-                std::get<16>(points),
-                std::get<28>(points),
-                std::get<29>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<18>(points),
-                std::get<17>(points),
-                std::get<29>(points),
-                std::get<30>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<19>(points),
-                std::get<18>(points),
-                std::get<30>(points),
-                std::get<31>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<28>(points),
-                std::get<31>(points),
-                std::get<30>(points),
-                std::get<29>(points), ABSOLUTE
-            ),
-            //in
-            new G4QuadrangularFacet(
-                std::get<12>(points),
-                std::get<8>(points),
-                std::get<11>(points),
-                std::get<15>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<12>(points),
-                std::get<13>(points),
-                std::get<9>(points),
-                std::get<8>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<13>(points),
-                std::get<14>(points),
-                std::get<10>(points),
-                std::get<9>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<14>(points),
-                std::get<15>(points),
-                std::get<11>(points),
-                std::get<10>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<8>(points),
-                std::get<20>(points),
-                std::get<23>(points),
-                std::get<11>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<8>(points),
-                std::get<9>(points),
-                std::get<21>(points),
-                std::get<20>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<9>(points),
-                std::get<10>(points),
-                std::get<22>(points),
-                std::get<21>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<10>(points),
-                std::get<11>(points),
-                std::get<23>(points),
-                std::get<22>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<23>(points),
-                std::get<20>(points),
-                std::get<24>(points),
-                std::get<27>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<20>(points),
-                std::get<21>(points),
-                std::get<25>(points),
-                std::get<24>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<21>(points),
-                std::get<22>(points),
-                std::get<26>(points),
-                std::get<25>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<22>(points),
-                std::get<23>(points),
-                std::get<27>(points),
-                std::get<26>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<24>(points),
-                std::get<25>(points),
-                std::get<26>(points),
-                std::get<27>(points), ABSOLUTE
-            ),
-            //hole side
-            new G4QuadrangularFacet(
-                std::get<7>(points),
-                std::get<4>(points),
-                std::get<12>(points),
-                std::get<15>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<4>(points),
-                std::get<5>(points),
-                std::get<13>(points),
-                std::get<12>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<5>(points),
-                std::get<6>(points),
-                std::get<14>(points),
-                std::get<13>(points), ABSOLUTE
-            ),
-            new G4QuadrangularFacet(
-                std::get<6>(points),
-                std::get<7>(points),
-                std::get<15>(points),
-                std::get<14>(points), ABSOLUTE
+            G4Transform3D(
+                G4RotationMatrix(),
+                G4ThreeVector(0.0, 0.0, 0.5 * (fAcrylicScintillatorGap - out))
             )
-        };
-        return facets;
+        );
     };
 
     // solid & logical gap between cover and scintillator construction
 
-    auto solidCoverScintillatorGap = new G4TessellatedSolid(fCoverScintillatorGapName);
-    for (G4VFacet* facet : CoverGenerator(0.0, fCoverScintillatorGap)) {
-        solidCoverScintillatorGap->AddFacet(facet);
-    }
-    solidCoverScintillatorGap->SetSolidClosed(true);
+    auto&& coverScintillatorGapCollection = GenerateCover(0.0, fCoverScintillatorGap);
+    coverScintillatorGapCollection.first->SetName(fCoverScintillatorGapName);
     auto logicalCoverScintillatorGap = new G4LogicalVolume(
-        solidCoverScintillatorGap,
+        coverScintillatorGapCollection.first,
         gapMaterial,
         fCoverScintillatorGapName
     );
-
-    G4Transform3D coverScintillatorGapTransform(
-        G4RotationMatrix(),
-        G4ThreeVector(0.0)
-    );
+    G4Transform3D coverScintillatorGapTransform(coverScintillatorGapCollection.second);
 
     // ============================================================================
     // cover
@@ -689,21 +422,14 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
 
     // solid & logical cover construction
 
-    auto solidCover = new G4TessellatedSolid(fCoverName);
-    for (G4VFacet* facet : CoverGenerator(fCoverScintillatorGap, fCoverScintillatorGap + fCoverThickness)) {
-        solidCover->AddFacet(facet);
-    }
-    solidCover->SetSolidClosed(true);
+    auto&& coverCollection = GenerateCover(fCoverScintillatorGap, fCoverScintillatorGap + fCoverThickness);
+    coverCollection.first->SetName(fCoverName);
     auto logicalCover = new G4LogicalVolume(
-        solidCover,
+        coverCollection.first,
         coverMaterial,
         fCoverName
     );
-
-    G4Transform3D coverTransform(
-        G4RotationMatrix(),
-        G4ThreeVector(0.0)
-    );
+    G4Transform3D coverTransform(coverCollection.second);
 
     // cover optical surface
     //

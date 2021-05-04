@@ -1,32 +1,27 @@
-#include <mutex>
-
 #include "G4MTRunManager.hh"
 #include "G4Run.hh"
 
 #include "SBAnalysisManager.hh"
 #include "SBDetectorConstruction.hh"
 
-std::mutex mutex_SBAnalysisManager;
+G4Mutex mutex_SBAnalysisManager;
 
 G4String SBAnalysisManager::fFileName = "unnamed";
+G4bool SBAnalysisManager::fRunHasCompleted = false;
 
 #if SB_SAVE_TYPE == 0
-#include "G4Run.hh"
 
-constexpr G4int profileSampleNum = 32;
-constexpr G4double profileMaxTime = 50.0 * ns;
+constexpr G4int profileSampleNum = 10000;
+constexpr G4double profileMaxTime = 10 * us;
 constexpr G4double profileMaxResponse = 10000;
 
 size_t SBAnalysisManager::fEventSN = 0;
 
 SBAnalysisManager::SBAnalysisManager() :
-    fpSiPMCount(&SBDetectorConstruction::Instance()->fSiPMCount) {}
+    fpSiPMCount(&static_cast<const SBDetectorConstruction*>(
+        G4MTRunManager::GetMasterRunManager()->GetUserDetectorConstruction())->fSiPMCount) {}
 
-void SBAnalysisManager::Initialize(G4int
-#if SB_SAVE_PHOTON_HIT_INFO || SB_SAVE_SIPM_RESPONSE_WAVEFORM
-    numberOfEvent
-#endif
-) const {
+void SBAnalysisManager::Open() const {
 #if SB_SAVE_ANYTHING
     auto g4AnalysisManager = G4Analysis::ManagerInstance("root");
     g4AnalysisManager->SetNtupleMerging(true);
@@ -80,7 +75,8 @@ void SBAnalysisManager::Initialize(G4int
         ss.clear();
 #endif
     }
-    for (G4int eventSN = 0; eventSN < numberOfEvent; ++eventSN) {
+    for (G4int eventSN = 0;
+        eventSN < G4MTRunManager::GetMasterRunManager()->GetCurrentRun()->GetNumberOfEventToBeProcessed(); ++eventSN) {
         std::string eventSNString;
         ss << eventSN;
         ss >> eventSNString;
@@ -106,16 +102,18 @@ void SBAnalysisManager::Initialize(G4int
 #endif
     }
 #endif
-}
 
-void SBAnalysisManager::Open() const {
-    G4AnalysisManager::Instance()->OpenFile(fFileName);
+    G4AnalysisManager::Instance()->OpenFile(fFileName + ".root");
 }
 
 void SBAnalysisManager::WriteAndClose() const {
     G4AnalysisManager::Instance()->Write();
     G4AnalysisManager::Instance()->CloseFile();
-    delete G4AnalysisManager::Instance();
+    auto run = G4MTRunManager::GetMasterRunManager()->GetCurrentRun();
+    if (run->GetNumberOfEvent() == run->GetNumberOfEventToBeProcessed() && !fRunHasCompleted) {
+        delete G4AnalysisManager::Instance();
+        fRunHasCompleted = true;
+    }
 }
 
 void SBAnalysisManager::FillMaxResponse(const std::vector<G4double>& maxResponseList) const {
@@ -156,7 +154,7 @@ void  SBAnalysisManager::FillPhotonInfo(G4int eventSN, G4int SiPMID, G4double ti
     g4AnalysisManager->AddNtupleRow(ntupleID);
 }
 
-void SBAnalysisManager::FillPhotoelectricResponse
+void SBAnalysisManager::FillWaveForm
 (G4int eventSN, G4int SiPMID, G4double time, G4double response) const {
     G4AnalysisManager::Instance()->FillP1(eventSN * *fpSiPMCount + SiPMID, time, response);
 }
@@ -208,11 +206,11 @@ void SBAnalysisManager::FillMuonHitInfo(G4double x, G4double y, G4double phi, G4
 }
 
 void SBAnalysisManager::EventComplete() const {
+    mutex_SBAnalysisManager.lock();
     auto WriteMuonInfo = [this](const SBMuonProperty& muonInfo)->void {
         *fout << muonInfo.GetX() / cm << ',' << muonInfo.GetY() / cm << ','
             << muonInfo.GetPhi() / rad << ',' << muonInfo.GetTheta() / rad << ',' << muonInfo.GetEnergy() / MeV;
     };
-    mutex_SBAnalysisManager.lock();
     WriteMuonInfo(fMuonGenerateInfo); *fout << ',';
     WriteMuonInfo(fMuonHitInfo);
     for (const auto& maxResponse : fMaxResponseList) { *fout << ',' << maxResponse; }
@@ -221,8 +219,12 @@ void SBAnalysisManager::EventComplete() const {
 }
 
 void SBAnalysisManager::WriteAndClose() const {
-    fout->close();
-    delete fout;
+    auto run = G4MTRunManager::GetMasterRunManager()->GetCurrentRun();
+    if (run->GetNumberOfEvent() == run->GetNumberOfEventToBeProcessed() && !fRunHasCompleted) {
+        fout->close();
+        delete fout;
+        fRunHasCompleted = true;
+    }
 }
 
 #endif

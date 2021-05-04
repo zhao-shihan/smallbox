@@ -34,7 +34,9 @@ int main(int argc, char** argv) {
     size_t numberOfThreads = maxLogicalCores / 2;
     std::string name("unnamed");
     bool isBatch = true;
+#if SB_SAVE_TYPE == 1
     bool reRun = false;
+#endif
     for (int i = 1; i < argc; ++i) {
         std::string argvStr(argv[i]);
         if (argvStr == "-event") {
@@ -55,9 +57,12 @@ int main(int argc, char** argv) {
             G4Random::setTheSeed(std::stol(argv[i + 1]));
         } else if (argvStr == "-vis") {
             isBatch = false;
-        } else if (argvStr == "-rerun") {
+        }
+#if SB_SAVE_TYPE == 1
+        else if (argvStr == "-rerun") {
             reRun = true;
         }
+#endif
     }
 
     if (isBatch) {
@@ -92,7 +97,7 @@ int main(int argc, char** argv) {
             return 1;
         }
         std::cout << " done." << std::endl;
-        
+
         if (eventList.find("propertyGrid") != eventList.end()) {
 #if SB_SAVE_TYPE == 1
             std::list<SBMuonProperty> existedEventList;
@@ -151,6 +156,7 @@ int main(int argc, char** argv) {
                         for (const auto& phi : phiSet) {
                             for (const auto& theta : thetaSet) {
                                 for (const auto& energy : energySet) {
+#if SB_SAVE_TYPE == 1
                                     SBMuonProperty event(x * cm, y * cm, phi * rad, theta * rad, energy * MeV);
                                     auto existedEvent =
                                         std::find(existedEventList.begin(), existedEventList.end(), event);
@@ -159,6 +165,10 @@ int main(int argc, char** argv) {
                                     } else {
                                         existedEventList.erase(existedEvent);
                                     }
+#else
+                                    muonEventList.push_back(
+                                        SBMuonProperty(x * cm, y * cm, phi * rad, theta * rad, energy * MeV));
+#endif
                                 }
                             }
                         }
@@ -168,7 +178,7 @@ int main(int argc, char** argv) {
             muonEventList.shrink_to_fit();
             SBPrimaryGeneratorAction::SetMuonEventList(muonEventList);
             std::cout << "Done. This run consists of " << muonEventList.size() << " events." << std::endl;
-
+#if SB_SAVE_TYPE == 1
             SBProgressMonitor::Instance()->SetPreviousProcessedEvents(numberOfExisted);
             SBProgressMonitor::Instance()->SetTotalEvents(numberOfEvent);
             std::cout <<
@@ -178,6 +188,7 @@ int main(int argc, char** argv) {
                 "\t        Total: " << numberOfEvent << "\n"
                 "\tAlready exist: " << numberOfExisted << "\n"
                 "\t    Remaining: " << muonEventList.size() << "\n" << std::endl;
+#endif
             if (isBatch) {
                 runManager->Initialize();
                 runManager->BeamOn(muonEventList.size());

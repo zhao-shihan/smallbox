@@ -7,8 +7,6 @@
 #include "SBDetectorConstruction.hh"
 #include "SBConfigs.hh"
 
-G4bool SBRunAction::fRunHasCompleted = false;
-
 SBRunAction::SBRunAction() :
     G4UserRunAction(),
     fAnalysisManager(new SBAnalysisManager()),
@@ -25,13 +23,10 @@ void SBRunAction::BeginOfRunAction(const G4Run*) {
     fProgressMonitor->RunStart();
 }
 
-void SBRunAction::EndOfRunAction(const G4Run* run) {
-    if (run->GetNumberOfEvent() == run->GetNumberOfEventToBeProcessed() && !fRunHasCompleted) {
+void SBRunAction::EndOfRunAction(const G4Run*) {
 #if SB_SAVE_ANYTHING
-        fAnalysisManager->WriteAndClose();
+    fAnalysisManager->WriteAndClose();
 #endif
-        fProgressMonitor->RunComplete();
-        fRunHasCompleted = true;
-    }
+    fProgressMonitor->RunComplete();
 }
 

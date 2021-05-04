@@ -14,6 +14,7 @@ class SBAnalysisManager {
 private:
     static G4String fFileName;
     static size_t fEventSN;
+    static G4bool fRunHasCompleted;
 
     const G4int* fpSiPMCount;
 
@@ -21,15 +22,13 @@ public:
     SBAnalysisManager();
     ~SBAnalysisManager() {}
 
-    void Initialize(G4int numberOfEvent) const;
     void Open() const;
-    void WriteAndClose() const;
-
     void FillMaxResponse(const std::vector<G4double>& maxResponseList) const;
     void FillMuonGenerateInfo(G4double x, G4double y, G4double phi, G4double theta, G4double energy) const;
     void FillMuonHitInfo(G4double x, G4double y, G4double phi, G4double theta, G4double energy) const;
     void FillPhotonInfo(G4int eventID, G4int SiPMID, G4double time, G4double energy) const;
-    void FillPhotoelectricResponse(G4int eventID, G4int SiPMID, G4double time, G4double response) const;
+    void FillWaveForm(G4int eventID, G4int SiPMID, G4double time, G4double response) const;
+    void WriteAndClose() const;
 
     static void SetFileName(const G4String& rootFileName) { fFileName = rootFileName; }
     static const G4String& GetFileName() { return fFileName; }
@@ -41,11 +40,13 @@ public:
 #include <fstream>
 #include <vector>
 #include "SBMuonProperty.hh"
+
 class SBAnalysisManager {
 private:
     static G4String fFileName;
     static std::ofstream* fout;
     static G4bool fIsContinue;
+    static G4bool fRunHasCompleted;
 
     const G4int* fpSiPMCount;
 

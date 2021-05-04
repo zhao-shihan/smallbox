@@ -47,7 +47,7 @@ G4bool SBSiPMSD::ProcessHits(G4Step* step, G4TouchableHistory*) {
         step->GetPreStepPoint()->GetGlobalTime(),
         step->GetPreStepPoint()->GetTotalEnergy()
     );
-    fSiPMPhotonHCList[step->GetPreStepPoint()->GetPhysicalVolume()->GetInstanceID()
+    fSiPMPhotonHCList[step->GetPreStepPoint()->GetPhysicalVolume()->GetCopyNo()
         / fDetectorConstruction->GetDetectorPartCount()]->insert(hit);
     return true;
 }
@@ -60,7 +60,7 @@ void SBSiPMSD::EndOfEvent(G4HCofThisEvent*) {
     }
     if (noSiPMWasHit) {
 #if SB_SAVE_SIPM_MAX_RESPONSE
-        fAnalysisManager->FillMaxResponse(std::vector<G4double>(*fpSiPMCount));
+        fAnalysisManager->FillMaxResponse(std::vector<G4double>(*fpSiPMCount, 0.0));
 #endif
         return;
     }
@@ -89,7 +89,7 @@ void SBSiPMSD::EndOfEvent(G4HCofThisEvent*) {
 #endif
 #if SB_SAVE_SIPM_RESPONSE_WAVEFORM
         for (const auto& aResponse : response) {
-            fAnalysisManager->FillPhotoelectricResponse(eventSN, SiPMID, aResponse.first, aResponse.second);
+            fAnalysisManager->FillWaveForm(eventSN, SiPMID, aResponse.first, aResponse.second);
         }
 #endif
 #if SB_SAVE_SIPM_MAX_RESPONSE
@@ -105,7 +105,7 @@ void SBSiPMSD::EndOfEvent(G4HCofThisEvent*) {
 std::vector<std::pair<G4double, G4double>>
 SBSiPMSD::ConstructSiPMPhotoelectricResponse(const std::vector<SBSiPMHit*>& hitList) const {
     constexpr G4double timeRes = 0.1 * ns;
-    constexpr G4double maxTime = 25.0 * ns;
+    constexpr G4double maxTime = 10 * us;
     constexpr G4double timeWindow = 5 * ns;
     std::vector<std::pair<G4double, G4double>> response(size_t(maxTime / timeRes) + 1, { 0.0, 0.0 });
     // set time.
