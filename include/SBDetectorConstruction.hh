@@ -21,8 +21,10 @@ public:
     // Scintillator
 
     const G4double fScintillatorHalfSize[3];
+    const G4int    fScintillatorCount;
     const G4String fScintillatorName;
 
+#if MLGB_STRUCTURE == 2
     // Acrylic light guide
 
     const G4double fAcrylicLightGuideSiPMSideHalfSize[2];
@@ -33,6 +35,7 @@ public:
 
     const G4double fAcrylicScintillatorGap;
     const G4String fAcrylicScintillatorGapName;
+#endif
 
     // Gap between cover and scintillator
 
@@ -47,9 +50,12 @@ public:
 
     // SiPM
 
-    const G4int fSiPMCount;
     const G4double fSiPMHalfSize[3];
     const G4double fSiPMScintillatorGap;
+    const G4int    fSiPMCount;
+#if MLGB_STRUCTURE == 1
+    const std::vector<G4ThreeVector> fSiPMPositionList;
+#endif
     const G4String fSiPMName;
 
     // Silicone Oil (Gap between SiPM and acrylic)
@@ -82,6 +88,10 @@ private:
     // Note: use for registering sensitive detector in ConstructSDandField().
     G4LogicalVolume* fLogicalSiPM;
     G4int fDetectorPartCount;
+    std::vector<G4int> fPhysicalScintillatorInstanceIDList;
+    std::vector<G4int> fPhysicalSiPMInstanceIDList;
+    std::map<G4int, size_t> fPhysicalScintillatorInstanceIDMap;
+    std::map<G4int, size_t> fPhysicalSiPMInstanceIDMap;
 
 public:
     virtual ~SBDetectorConstruction();
@@ -90,6 +100,10 @@ public:
 
     const G4double& GetWorldZMax() const { return fWorldZMax; }
     const G4int& GetDetectorPartCount() const { return fDetectorPartCount; }
+    const auto& GetScintillatorInstanceIDList() const { return fPhysicalScintillatorInstanceIDList; }
+    const auto& GetSiPMInstanceIDList() const { return fPhysicalSiPMInstanceIDList; }
+    const auto& GetScintillatorInstanceIDMap() const { return fPhysicalScintillatorInstanceIDMap; }
+    const auto& GetSiPMInstanceIDMap() const { return fPhysicalSiPMInstanceIDMap; }
 
 private:
     virtual void ConstructSDandField();

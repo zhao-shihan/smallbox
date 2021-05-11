@@ -16,14 +16,17 @@ SBDetectorConstruction::SBDetectorConstruction() :
     fWorldName("world"),
 
     fScintillatorHalfSize{ 5 * cm, 5 * cm, 0.5 * cm },
+    fScintillatorCount(2),
     fScintillatorName("scintillator"),
 
+#if MLGB_STRUCTURE == 2
     fAcrylicLightGuideSiPMSideHalfSize{ 1 * cm, 1 * cm },
     fAcrylicLightGuideLength(2 * cm),
     fAcrylicName("arcylic"),
 
     fAcrylicScintillatorGap(50 * um),
     fAcrylicScintillatorGapName("arcylic_scintillator_gap"),
+#endif
 
     fCoverScintillatorGap(50 * um),
     fCoverScintillatorGapName("cover_scintillator_gap"),
@@ -32,9 +35,18 @@ SBDetectorConstruction::SBDetectorConstruction() :
     fCoverHoleHalfWidth(4 * mm),
     fCoverName("cover"),
 
-    fSiPMCount(1 * 2),
     fSiPMHalfSize{ 3.5 * mm, 3.5 * mm, 0.25 * mm },
     fSiPMScintillatorGap(30 * um),
+#if MLGB_STRUCTURE == 0 || MLGB_STRUCTURE == 2
+    fSiPMCount(1 * fScintillatorCount),
+#elif MLGB_STRUCTURE == 1
+    fSiPMCount(4 * fScintillatorCount),
+    fSiPMPositionList{
+    G4ThreeVector(1.25 * cm, 1.25 * cm, fScintillatorHalfSize[2] + fSiPMScintillatorGap + fSiPMHalfSize[2]),
+    G4ThreeVector(-1.25 * cm, 1.25 * cm, fScintillatorHalfSize[2] + fSiPMScintillatorGap + fSiPMHalfSize[2]),
+    G4ThreeVector(-1.25 * cm, -1.25 * cm, fScintillatorHalfSize[2] + fSiPMScintillatorGap + fSiPMHalfSize[2]),
+    G4ThreeVector(1.25 * cm, -1.25 * cm, fScintillatorHalfSize[2] + fSiPMScintillatorGap + fSiPMHalfSize[2]) },
+#endif
     fSiPMName("SiPM"),
 
     fSiliconeOilHalfWidth(fCoverHoleHalfWidth),
@@ -51,7 +63,16 @@ SBDetectorConstruction::SBDetectorConstruction() :
     fLogicalScintillator(nullptr),
     fLogicalSiPM(nullptr),
 
-    fDetectorPartCount(0) {}
+    fDetectorPartCount(0),
+
+    fPhysicalScintillatorInstanceIDList(),
+    fPhysicalSiPMInstanceIDList(),
+    fPhysicalScintillatorInstanceIDMap(),
+    fPhysicalSiPMInstanceIDMap()
+{
+    fPhysicalScintillatorInstanceIDList.reserve(fScintillatorCount);
+    fPhysicalSiPMInstanceIDList.reserve(fSiPMCount);
+}
 
 SBDetectorConstruction::~SBDetectorConstruction() {}
 
@@ -100,6 +121,7 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     scintillatorMaterial->AddElement(H, 10);
     SetScintillatorMaterialProperties(scintillatorMaterial);
 
+#if MLGB_STRUCTURE == 2
     // ============================================================================
     // acrylic material
     // ============================================================================
@@ -118,6 +140,7 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     auto acrylicMaterialPropertiesTable = new G4MaterialPropertiesTable();
     acrylicMaterialPropertiesTable->AddProperty("RINDEX", acrylicRefractionIndex);
     acrylicMaterial->SetMaterialPropertiesTable(acrylicMaterialPropertiesTable);
+#endif
 
     // ============================================================================
     // silicone oil material
@@ -221,7 +244,10 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
 
     // world construction
 
-    fWorldZMax = 0.5 * fDetectorDistance + fScintillatorHalfSize[2] + fAcrylicLightGuideLength + 1 * cm;
+    fWorldZMax = 0.5 * fDetectorDistance + fScintillatorHalfSize[2] + 1 * cm;
+#if MLGB_STRUCTURE == 2
+    fWorldZMax += fAcrylicLightGuideLength;
+#endif
     auto solidWorld = new G4Box(
         fWorldName,
         fScintillatorHalfSize[0] + 1 * cm,
@@ -266,6 +292,7 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
         G4ThreeVector(0.0)
     );
 
+#if MLGB_STRUCTURE == 2
     // ============================================================================
     // acrylic light guide
     // ============================================================================
@@ -313,11 +340,68 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
         G4RotationMatrix(),
         G4ThreeVector(0.0, 0.0, fScintillatorHalfSize[2] + 0.5 * fAcrylicScintillatorGap)
     );
+#endif 
 
     // ============================================================================
     // gap between cover and scintillator
     // ============================================================================
 
+#if MLGB_STRUCTURE == 0 || MLGB_STRUCTURE == 1
+    auto solidRod = new G4Box(
+        fTempName,
+        fCoverHoleHalfWidth,
+        fCoverHoleHalfWidth,
+        fScintillatorHalfSize[2]
+    );
+    auto GenerateCover = [this, solidRod](G4double in, G4double out)->std::pair<G4VSolid*, G4Transform3D> {
+        auto solid = new G4SubtractionSolid(
+            fTempName,
+            new G4Box(
+                fTempName,
+                fScintillatorHalfSize[0] + out,
+                fScintillatorHalfSize[1] + out,
+                fScintillatorHalfSize[2] + out
+            ),
+            new G4Box(
+                fTempName,
+                fScintillatorHalfSize[0] + in,
+                fScintillatorHalfSize[1] + in,
+                fScintillatorHalfSize[2] + in
+            )
+        );
+#if MLGB_STRUCTURE == 0
+        solid = new G4SubtractionSolid(
+            fTempName,
+            solid,
+            solidRod,
+            G4Transform3D(
+                G4RotationMatrix(),
+                G4ThreeVector(0.0, 0.0, fScintillatorHalfSize[2])
+            )
+        );
+#elif MLGB_STRUCTURE == 1
+        for (const auto& SiPMPosition : fSiPMPositionList) {
+            solid = new G4SubtractionSolid(
+                fTempName,
+                solid,
+                solidRod,
+                G4Transform3D(
+                    G4RotationMatrix(),
+                    SiPMPosition
+                )
+            );
+        }
+#endif
+        return std::make_pair(
+            solid,
+            G4Transform3D(
+                G4RotationMatrix(),
+                G4ThreeVector()
+            )
+        );
+    };
+
+#elif MLGB_STRUCTURE == 2
     auto solidRod = new G4Box(
         fTempName,
         fCoverHoleHalfWidth,
@@ -404,6 +488,7 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
             )
         );
     };
+#endif
 
     // solid & logical gap between cover and scintillator construction
 
@@ -464,12 +549,25 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
         fSiPMName
     );
 
+#if MLGB_STRUCTURE == 0
+    G4double SiPMZ = fScintillatorHalfSize[2] + fSiPMScintillatorGap + fSiPMHalfSize[2];
+    G4Transform3D SiPMTransform(
+        G4RotationMatrix(),
+        G4ThreeVector(0.0, 0.0, SiPMZ)
+    );
+#elif MLGB_STRUCTURE == 1
+    std::vector<G4Transform3D> SiPMTransformList; SiPMTransformList.reserve(fSiPMCount);
+    for (const auto& SiPMPosition : fSiPMPositionList) {
+        SiPMTransformList.push_back(G4Transform3D(G4RotationMatrix(), SiPMPosition));
+    }
+#elif MLGB_STRUCTURE == 2
     G4double SiPMZ = fScintillatorHalfSize[2] + fAcrylicScintillatorGap
         + fAcrylicLightGuideLength + fSiPMScintillatorGap + fSiPMHalfSize[2];
     G4Transform3D SiPMTransform(
         G4RotationMatrix(),
         G4ThreeVector(0.0, 0.0, SiPMZ)
     );
+#endif
 
     // ============================================================================
     // light guides
@@ -485,8 +583,10 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
             0.5 * fSiliconeOilThickness
         ),
         solidSiPM,
-        nullptr,
-        G4ThreeVector(0.0, 0.0, fSiPMScintillatorGap - (0.5 * fSiliconeOilThickness - fSiPMHalfSize[2]))
+        G4Transform3D(
+            G4RotationMatrix(),
+            G4ThreeVector(0.0, 0.0, fSiPMScintillatorGap - (0.5 * fSiliconeOilThickness - fSiPMHalfSize[2]))
+        )
     );
     auto logicalLightGuide = new G4LogicalVolume(
         solidLightGuide,
@@ -494,12 +594,31 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
         fSiliconeOilName
     );
 
+#if MLGB_STRUCTURE == 0
+    G4double lightGuideZ = fScintillatorHalfSize[2] + 0.5 * fSiliconeOilThickness;
+    G4Transform3D lightGuideTransform(
+        G4RotationMatrix(),
+        G4ThreeVector(0.0, 0.0, lightGuideZ)
+    );
+#elif MLGB_STRUCTURE == 1
+    std::vector<G4Transform3D> lightGuideTransformList; lightGuideTransformList.reserve(fSiPMCount);
+    for (const auto& SiPMPosition : fSiPMPositionList) {
+        lightGuideTransformList.push_back(
+            G4Transform3D(
+                G4RotationMatrix(),
+                SiPMPosition + G4ThreeVector(0.0, 0.0,
+                    -fSiPMHalfSize[2] - fSiPMScintillatorGap + 0.5 * fSiliconeOilThickness)
+            )
+        );
+    }
+#elif MLGB_STRUCTURE == 2
     G4double lightGuideZ = fScintillatorHalfSize[2] + fAcrylicScintillatorGap
         + fAcrylicLightGuideLength + 0.5 * fSiliconeOilThickness;
     G4Transform3D lightGuideTransform(
         G4RotationMatrix(),
         G4ThreeVector(0.0, 0.0, lightGuideZ)
     );
+#endif
 
     // ============================================================================
     // PCB
@@ -519,11 +638,23 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
         fPCBName
     );
 
+#if MLGB_STRUCTURE == 0 || MLGB_STRUCTURE ==2
     G4double PCBZ = SiPMZ + fSiPMHalfSize[2] + fPCBHalfSize[2];
     G4Transform3D PCBTransform(
         G4RotationMatrix(),
         G4ThreeVector(0.0, 0.0, PCBZ)
     );
+#elif MLGB_STRUCTURE == 1
+    std::vector<G4Transform3D> PCBTransformList; PCBTransformList.reserve(fSiPMCount);
+    for (const auto& SiPMPosition : fSiPMPositionList) {
+        PCBTransformList.push_back(
+            G4Transform3D(
+                G4RotationMatrix(),
+                SiPMPosition + G4ThreeVector(0.0, 0.0, fSiPMHalfSize[2] + fPCBHalfSize[2])
+            )
+        );
+    }
+#endif
 
     // ============================================================================
     // physical detector
@@ -533,16 +664,36 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
 
     // place scintillator
     detector->AddPlacedVolume(fLogicalScintillator, scintillatorTransform); ++fDetectorPartCount;
-    // place SiPM
-    detector->AddPlacedVolume(fLogicalSiPM, SiPMTransform); ++fDetectorPartCount;
-    // place light guide
-    detector->AddPlacedVolume(logicalLightGuide, lightGuideTransform); ++fDetectorPartCount;
-    // place PCB
-    detector->AddPlacedVolume(logicalPCB, PCBTransform); ++fDetectorPartCount;
+    fPhysicalScintillatorInstanceIDList.push_back(fDetectorPartCount);
+#if MLGB_STRUCTURE == 2
     // place acrylic
     detector->AddPlacedVolume(logicalAcrylic, acrylicTransform); ++fDetectorPartCount;
     // place gap between acrylic and scintillator
     detector->AddPlacedVolume(logicalAcrylicScintillatorGap, acrylicScintillatorGapTransform); ++fDetectorPartCount;
+#endif
+#if MLGB_STRUCTURE == 0 || MLGB_STRUCTURE == 2
+    // place SiPM
+    detector->AddPlacedVolume(fLogicalSiPM, SiPMTransform); ++fDetectorPartCount;
+    fPhysicalSiPMInstanceIDList.push_back(fDetectorPartCount);
+    // place light guide
+    detector->AddPlacedVolume(logicalLightGuide, lightGuideTransform); ++fDetectorPartCount;
+    // place PCB
+    detector->AddPlacedVolume(logicalPCB, PCBTransform); ++fDetectorPartCount;
+#elif MLGB_STRUCTURE == 1
+    // place SiPMs
+    for (auto& SiPMTransform : SiPMTransformList) {
+        detector->AddPlacedVolume(fLogicalSiPM, SiPMTransform); ++fDetectorPartCount;
+        fPhysicalSiPMInstanceIDList.push_back(fDetectorPartCount);
+    }
+    // place light guides
+    for (auto& lightGuideTransform : lightGuideTransformList) {
+        detector->AddPlacedVolume(logicalLightGuide, lightGuideTransform); ++fDetectorPartCount;
+    }
+    // place PCBs
+    for (auto& PCBTransform : PCBTransformList) {
+        detector->AddPlacedVolume(logicalPCB, PCBTransform); ++fDetectorPartCount;
+    }
+#endif
     // place gap between cover and scintillator
     detector->AddPlacedVolume(logicalCoverScintillatorGap, coverScintillatorGapTransform); ++fDetectorPartCount;
     // place cover
@@ -554,6 +705,26 @@ G4VPhysicalVolume* SBDetectorConstruction::Construct() {
     auto lowerDetectorTrans =
         G4Transform3D(G4RotationMatrix(G4ThreeVector(1.0), M_PI), G4ThreeVector(0.0, 0.0, -0.5 * fDetectorDistance));
     detector->MakeImprint(logicalWorld, lowerDetectorTrans);
+
+    fPhysicalScintillatorInstanceIDList.resize(fScintillatorCount);
+    fPhysicalSiPMInstanceIDList.resize(fSiPMCount);
+    G4int SiPMCountOnSingleDetector = fSiPMCount / fScintillatorCount;
+    for (G4int detectorID = 1; detectorID < fScintillatorCount; ++detectorID) {
+        fPhysicalScintillatorInstanceIDList[detectorID] =
+            fPhysicalScintillatorInstanceIDList[detectorID - 1] + fDetectorPartCount;
+        for (G4int SiPMID = 0; SiPMID < SiPMCountOnSingleDetector; ++SiPMID) {
+            fPhysicalSiPMInstanceIDList[SiPMID + detectorID * SiPMCountOnSingleDetector] =
+                fPhysicalSiPMInstanceIDList[SiPMID] + detectorID * fDetectorPartCount;
+        }
+    }
+
+    for (G4int ScintillatorID = 0; ScintillatorID < fScintillatorCount; ++ScintillatorID) {
+        fPhysicalScintillatorInstanceIDMap.insert(
+            std::make_pair(fPhysicalScintillatorInstanceIDList[ScintillatorID], ScintillatorID));
+    }
+    for (G4int SiPMID = 0; SiPMID < fSiPMCount; ++SiPMID) {
+        fPhysicalSiPMInstanceIDMap.insert(std::make_pair(fPhysicalSiPMInstanceIDList[SiPMID], SiPMID));
+    }
 
     return physicalWorld;
 }
